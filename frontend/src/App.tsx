@@ -3,8 +3,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { initApiClient } from './api/client'
 import { useEffect } from 'react'
 import Layout from './components/Layout'
+import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import SkillDetail from './pages/SkillDetail'
 
 const Placeholder = ({ title }: { title: string }) => (
   <div className="text-center py-20 text-gray-400">{title} - 开发中</div>
@@ -25,10 +27,10 @@ function AppRoutes() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Placeholder title="首页" />} />
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/skills/:name" element={<Placeholder title="Skill 详情" />} />
+        <Route path="/skills/:name" element={<SkillDetail />} />
         <Route path="/upload" element={<Placeholder title="上传" />} />
         <Route path="/my" element={<Placeholder title="我的" />} />
         <Route path="/admin" element={<Placeholder title="管理" />} />
