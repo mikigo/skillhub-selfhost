@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { useAuth } from '../contexts/AuthContext'
 import { apiFetch } from '../api/client'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -166,7 +165,6 @@ async function listFilesFromEntry(entry: FileSystemDirectoryEntry): Promise<numb
 }
 
 export default function Upload() {
-  const { user } = useAuth()
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const [folderName, setFolderName] = useState('')
@@ -179,8 +177,6 @@ export default function Upload() {
   const [version, setVersion] = useState('')
   const [releaseNotes, setReleaseNotes] = useState('')
   const [uploading, setUploading] = useState(false)
-
-  if (!user) { navigate('/login'); return null }
 
   async function handleDrop(e: React.DragEvent) {
     e.preventDefault()

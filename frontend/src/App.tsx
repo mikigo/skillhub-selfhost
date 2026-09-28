@@ -10,10 +10,8 @@ import SkillDetail from './pages/SkillDetail'
 import MySkills from './pages/MySkills'
 import Upload from './pages/Upload'
 import Admin from './pages/Admin'
-
-const Placeholder = ({ title }: { title: string }) => (
-  <div className="text-center py-20 text-gray-400">{title} - 开发中</div>
-)
+import Author from './pages/Author'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function AppRoutes() {
   const { accessToken, refreshToken, logout, refreshAuth } = useAuth()
@@ -34,9 +32,10 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/skills/:name" element={<SkillDetail />} />
-        <Route path="/upload" element={<Upload />} />
-        <Route path="/my" element={<MySkills />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+        <Route path="/my" element={<ProtectedRoute><MySkills /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute admin><Admin /></ProtectedRoute>} />
+        <Route path="/author/:username" element={<Author />} />
       </Route>
     </Routes>
   )

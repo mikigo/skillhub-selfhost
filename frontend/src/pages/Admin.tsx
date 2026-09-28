@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { useAuth } from '../contexts/AuthContext'
 import { apiFetch } from '../api/client'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -22,15 +20,11 @@ interface UserItem {
 }
 
 export default function Admin() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
   const [users, setUsers] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
-
-  if (!user?.is_admin) { navigate('/'); return null }
 
   useEffect(() => { loadUsers() }, [])
 

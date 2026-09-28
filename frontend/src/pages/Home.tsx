@@ -81,11 +81,20 @@ export default function Home() {
         </div>
       </form>
 
-      <div className="flex gap-2 mb-4">
-        {(['downloads', 'weekly', 'newest'] as const).map(s => (
-          <Button key={s} variant={sort === s ? 'default' : 'outline'} size="sm" onClick={() => { setSort(s); setPage(1) }}>
-            {{downloads: '总下载', weekly: '本周热门', newest: '最新上传'}[s]}
-          </Button>
+      <div className="flex gap-6 mb-4">
+        {([
+          { key: 'downloads', label: '总下载', count: total },
+          { key: 'weekly', label: '本周热门' },
+          { key: 'newest', label: '最新上传' },
+        ] as const).map((item) => (
+          <button
+            key={item.key}
+            className={`pb-1.5 text-sm font-medium border-b-2 transition-colors ${sort === item.key ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+            onClick={() => { setSort(item.key); setPage(1) }}
+          >
+            {item.label}
+            {'count' in item && <span className="ml-1 text-muted-foreground">({item.count.toLocaleString()})</span>}
+          </button>
         ))}
       </div>
 
@@ -129,10 +138,9 @@ export default function Home() {
                 <div className="font-medium">{skill.display_name}</div>
                 <div className="text-xs text-gray-500 truncate">{skill.description}</div>
               </div>
-              <span className="col-span-2 text-sm text-gray-600">
+<Link to={`/author/${skill.author.username}`} className="col-span-2 text-sm text-gray-600 hover:text-blue-600">
                 {skill.author.username}
-                {skill.author.status === 'disabled' && <Badge variant="destructive" className="ml-1 text-[10px]">已封禁</Badge>}
-              </span>
+              </Link>
               <span className="col-span-2 text-sm text-gray-500">{skill.latest_version}</span>
               <span className="col-span-2 flex gap-1 flex-wrap">
                 {skill.tags.slice(0, 3).map(t => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}

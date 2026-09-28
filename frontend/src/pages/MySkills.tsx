@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { useAuth } from '../contexts/AuthContext'
 import { apiFetch } from '../api/client'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
@@ -19,12 +18,8 @@ interface MySkill {
 }
 
 export default function MySkills() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
   const [skills, setSkills] = useState<MySkill[]>([])
   const [loading, setLoading] = useState(true)
-
-  if (!user) { navigate('/login'); return null }
 
   useEffect(() => { loadSkills() }, [])
 
@@ -74,7 +69,6 @@ export default function MySkills() {
           <ArrowLeft className="h-4 w-4 mr-1" />返回首页
         </Link>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600">{user.username}</span>
           <Link to="/upload"><Button size="sm"><Plus className="h-4 w-4 mr-1" />上传新 Skill</Button></Link>
         </div>
       </div>

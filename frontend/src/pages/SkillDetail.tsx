@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
 import { apiFetch } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
@@ -102,6 +103,8 @@ export default function SkillDetail() {
         <span className="text-sm text-gray-500">{skill.display_name} @ {selectedVersion}</span>
       </div>
 
+      <h1 className="text-2xl font-bold mb-4">{skill.display_name}</h1>
+
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-9">
           <Card>
@@ -112,7 +115,7 @@ export default function SkillDetail() {
                 </pre>
               )}
               <div className="md-content">
-                <ReactMarkdown
+                <ReactMarkdown remarkPlugins={[remarkGfm]}
                   components={{
                     h1: ({ children }) => <h1 className="text-2xl font-bold mb-3 mt-6 first:mt-0">{children}</h1>,
                     h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-5">{children}</h2>,
@@ -121,6 +124,12 @@ export default function SkillDetail() {
                     ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
                     ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
                     li: ({ children }) => <li className="mb-1">{children}</li>,
+                    table: ({ children }) => <div className="overflow-x-auto mb-3"><table className="w-full border-collapse border border-gray-200 text-sm">{children}</table></div>,
+                    thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+                    tbody: ({ children }) => <tbody>{children}</tbody>,
+                    tr: ({ children }) => <tr className="border-b border-gray-200">{children}</tr>,
+                    th: ({ children }) => <th className="px-3 py-2 text-left font-medium text-gray-600">{children}</th>,
+                    td: ({ children }) => <td className="px-3 py-2">{children}</td>,
                     code: ({ children, className, ...props }: any) => {
                       const isInline = !className
                       return isInline
@@ -153,7 +162,7 @@ export default function SkillDetail() {
               </div>
               <div>
                 <div className="text-sm text-gray-500">基本信息</div>
-                <div className="text-sm mt-1">作者: {skill.author.username}</div>
+                <div className="text-sm mt-1">作者: <Link to={`/author/${skill.author.username}`} className="text-blue-600 hover:underline">{skill.author.username}</Link></div>
                 <div className="text-sm">下载: {skill.download_count.toLocaleString()} 次</div>
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {skill.tags.map(t => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}

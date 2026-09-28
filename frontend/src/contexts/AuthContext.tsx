@@ -12,6 +12,7 @@ interface AuthState {
   user: User | null
   accessToken: string | null
   refreshToken: string | null
+  initializing: boolean
   login: (accessToken: string, refreshToken: string, user: User) => void
   logout: () => void
   refreshAuth: () => Promise<boolean>
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthState | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [initializing, setInitializing] = useState(!!localStorage.getItem('access_token'))
   const [accessToken, setAccessToken] = useState<string | null>(() => localStorage.getItem('access_token'))
   const [refreshToken, setRefreshToken] = useState<string | null>(() => localStorage.getItem('refresh_token'))
 
@@ -74,11 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (u) setUser(u)
           else logout()
         })
+        .finally(() => setInitializing(false))
     }
   }, [accessToken])
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, refreshToken, login, logout, refreshAuth }}>
+    <AuthContext.Provider value={{ user, accessToken, refreshToken, initializing, login, logout, refreshAuth }}>
       {children}
     </AuthContext.Provider>
   )

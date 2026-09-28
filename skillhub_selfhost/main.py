@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pathlib import Path
 from skillhub_selfhost.auth.router import router as auth_router
 from skillhub_selfhost.admin.router import router as admin_router
@@ -18,6 +19,13 @@ def create_app() -> FastAPI:
 
     dist_path = Path(__file__).parent / "dist"
     if dist_path.exists() and (dist_path / "index.html").exists():
-        app.mount("/", StaticFiles(directory=str(dist_path), html=True))
+        app.mount("/assets", StaticFiles(directory=str(dist_path / "assets")))
+
+        @app.get("/{full_path:path}")
+        async def serve_spa(full_path: str):
+            index = dist_path / "index.html"
+            if index.exists():
+                return FileResponse(index)
+            return {"detail": "Not Found"}
 
     return app
