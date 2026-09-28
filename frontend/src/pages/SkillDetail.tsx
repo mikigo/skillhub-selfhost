@@ -40,8 +40,8 @@ export default function SkillDetail() {
 
   async function loadSkill(version?: string) {
     setLoading(true)
-    const params = version ? `?version=${version}` : ''
-    const resp = await apiFetch(`/api/skills/${name}/${params}`)
+    const query = version ? `?version=${version}` : ''
+    const resp = await apiFetch(`/api/skills/${name}${query}`)
     if (!resp.ok) { setLoading(false); return }
     const data = await resp.json()
     setSkill(data)
