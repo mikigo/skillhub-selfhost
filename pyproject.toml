@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "skillhub-selfhost"
 version = "0.1.0"
 description = "A self-hosted AI skill marketplace"
-requires-python = ">=3.10"
+requires-python = ">=3.8"
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.29.0",

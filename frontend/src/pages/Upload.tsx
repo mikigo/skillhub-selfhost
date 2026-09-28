@@ -8,7 +8,28 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Badge } from '../components/ui/badge'
 import { Card, CardContent } from '../components/ui/card'
-import { ArrowLeft, FolderOpen, X, Loader2 } from 'lucide-react'
+import { ArrowLeft, FolderOpen, X } from 'lucide-react'
+
+function parseFrontmatterField(mdContent: string, field: string): string {
+  const trimmed = mdContent.trimStart()
+  if (!trimmed.startsWith('---')) return ''
+  const end = trimmed.indexOf('---', 3)
+  if (end === -1) return ''
+  const fm = trimmed.slice(3, end)
+  const regex = new RegExp(`^${field}\\\\s*:\\\\s*["']?(.+)["']?\\s*$`, 'im')
+  const match = fm.match(regex)
+  return match ? match[1].trim().replace(/^['"]|['"]$/g, '') : ''
+}
+
+function extractDescFromFiles(files: { name: string; data: Uint8Array }[]): string {
+  for (const f of files) {
+    if (f.name.endsWith('SKILL.md') || f.name.endsWith('skill.md')) {
+      const content = new TextDecoder().decode(f.data)
+      return parseFrontmatterField(content, 'description')
+    }
+  }
+  return ''
+}
 
 function crc32(data: Uint8Array): number {
   let crc = 0xFFFFFFFF
@@ -180,6 +201,7 @@ export default function Upload() {
       setFolderName(name)
       setFileCount(all.length)
       setDisplayName(name)
+      setDescription(extractDescFromFiles(all))
     }
   }
 
@@ -192,6 +214,7 @@ export default function Upload() {
     setFolderName(name)
     setFileCount(all.length)
     setDisplayName(name)
+    setDescription(extractDescFromFiles(all))
   }
 
   async function handleUpload(e: React.FormEvent) {

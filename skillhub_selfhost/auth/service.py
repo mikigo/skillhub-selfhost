@@ -3,6 +3,7 @@ import bcrypt
 import jwt
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from skillhub_selfhost.auth.models import User
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
@@ -80,5 +81,5 @@ async def refresh_token(token: str, secret: str) -> dict:
     )
     return {"access_token": access_token, "refresh_token": new_refresh_token}
 
-async def get_user_by_id(user_id: str) -> User | None:
+async def get_user_by_id(user_id: str) -> Optional[User]:
     return await User.filter(id=user_id).first()

@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from skillhub_selfhost.auth.dependencies import require_admin
 from skillhub_selfhost.auth.models import User
@@ -9,8 +10,8 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 @router.get("/users/")
 async def list_users(
-    status_filter: str | None = Query(None, alias="status"),
-    is_admin: bool | None = Query(None),
+    status_filter: Optional[str] = Query(None, alias="status"),
+    is_admin: Optional[bool] = Query(None),
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     _: User = Depends(require_admin),

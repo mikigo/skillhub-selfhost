@@ -1,4 +1,5 @@
 # skillhub_selfhost/auth/dependencies.py
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from skillhub_selfhost.auth.service import decode_token, get_user_by_id
@@ -8,8 +9,8 @@ from skillhub_selfhost.config import Config
 security = HTTPBearer(auto_error=False)
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security),
-) -> User | None:
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> Optional[User]:
     if credentials is None:
         return None
     config = Config()
@@ -24,7 +25,7 @@ async def get_current_user(
         return None
 
 async def require_user(
-    user: User | None = Depends(get_current_user),
+    user: Optional[User] = Depends(get_current_user),
 ) -> User:
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="请先登录")
