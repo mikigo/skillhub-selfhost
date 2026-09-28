@@ -11,11 +11,7 @@ import { Card, CardContent } from '../components/ui/card'
 import { ArrowLeft, Copy, Download, Trash2 } from 'lucide-react'
 
 function stripFrontmatter(md: string): string {
-  const trimmed = md.trimStart()
-  if (!trimmed.startsWith('---')) return md
-  const end = trimmed.indexOf('\n---', 3)
-  if (end === -1) return md
-  return trimmed.slice(end + 4).trimStart()
+  return md.replace(/^---[\s\S]*?---\r?\n?/, '').trimStart()
 }
 
 interface Version {
