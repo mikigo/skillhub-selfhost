@@ -13,12 +13,12 @@ import { ArrowLeft, FolderOpen, X } from 'lucide-react'
 function parseFrontmatterField(mdContent: string, field: string): string {
   const trimmed = mdContent.trimStart()
   if (!trimmed.startsWith('---')) return ''
-  const end = trimmed.indexOf('---', 3)
+  const end = trimmed.indexOf('\n---', 3)
   if (end === -1) return ''
   const fm = trimmed.slice(3, end)
-  const regex = new RegExp(`^${field}\\\\s*:\\\\s*["']?(.+)["']?\\s*$`, 'im')
+  const regex = new RegExp(`^${field}\\s*:\\s*(.+)$`, 'im')
   const match = fm.match(regex)
-  return match ? match[1].trim().replace(/^['"]|['"]$/g, '') : ''
+  return match ? match[1].trim().replace(/^["']|["']$/g, '') : ''
 }
 
 function extractDescFromFiles(files: { name: string; data: Uint8Array }[]): string {

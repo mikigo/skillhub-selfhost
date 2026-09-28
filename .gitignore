@@ -5,6 +5,7 @@ __pycache__/
 .secret
 # C extensions
 *.so
+*.db
 node_modules/
 logs/
 skills/
