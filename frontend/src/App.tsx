@@ -7,6 +7,8 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import SkillDetail from './pages/SkillDetail'
+import MySkills from './pages/MySkills'
+import Upload from './pages/Upload'
 
 const Placeholder = ({ title }: { title: string }) => (
   <div className="text-center py-20 text-gray-400">{title} - 开发中</div>
@@ -31,8 +33,8 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/skills/:name" element={<SkillDetail />} />
-        <Route path="/upload" element={<Placeholder title="上传" />} />
-        <Route path="/my" element={<Placeholder title="我的" />} />
+        <Route path="/upload" element={<Upload />} />
+        <Route path="/my" element={<MySkills />} />
         <Route path="/admin" element={<Placeholder title="管理" />} />
       </Route>
     </Routes>
