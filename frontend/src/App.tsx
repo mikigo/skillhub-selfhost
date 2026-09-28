@@ -9,6 +9,7 @@ import Register from './pages/Register'
 import SkillDetail from './pages/SkillDetail'
 import MySkills from './pages/MySkills'
 import Upload from './pages/Upload'
+import Admin from './pages/Admin'
 
 const Placeholder = ({ title }: { title: string }) => (
   <div className="text-center py-20 text-gray-400">{title} - 开发中</div>
@@ -35,7 +36,7 @@ function AppRoutes() {
         <Route path="/skills/:name" element={<SkillDetail />} />
         <Route path="/upload" element={<Upload />} />
         <Route path="/my" element={<MySkills />} />
-        <Route path="/admin" element={<Placeholder title="管理" />} />
+        <Route path="/admin" element={<Admin />} />
       </Route>
     </Routes>
   )
