@@ -42,7 +42,7 @@ export default function Login() {
   return (
     <div className="flex justify-center mt-20">
       <Card className="w-96">
-        <CardHeader><CardTitle className="text-center">登录 skillhub</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-center">登录 SkillHub</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

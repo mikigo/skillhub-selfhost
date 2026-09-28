@@ -11,7 +11,7 @@ export default function Layout() {
     <div className="min-h-screen bg-gray-50">
       <header className="border-b bg-white">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/" className="font-bold text-lg">skillhub</Link>
+          <Link to="/" className="font-bold text-lg">SkillHub</Link>
           <div className="flex items-center gap-3">
             {user ? (
               <>
