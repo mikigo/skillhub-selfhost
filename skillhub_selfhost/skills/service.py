@@ -2,9 +2,12 @@
 import io
 import tarfile
 import re
+import shutil
 from pathlib import Path
-from skillhub_selfhost.skills.models import Skill, SkillVersion
+from tortoise.expressions import Q
+from skillhub_selfhost.skills.models import Skill, SkillVersion, DownloadLog
 from skillhub_selfhost.auth.models import User
+from skillhub_selfhost.config import Config
 
 SKILL_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$")
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
@@ -100,3 +103,194 @@ async def upload_skill(
     )
 
     return existing
+
+
+async def list_skills(page: int = 1, size: int = 20, sort: str = "downloads") -> tuple[list[dict], int]:
+    qs = Skill.all().prefetch_related("author")
+    if sort == "downloads":
+        qs = qs.order_by("-download_count")
+    elif sort == "newest":
+        qs = qs.order_by("-created_at")
+
+    total = await qs.count()
+    skills = await qs.offset((page - 1) * size).limit(size).all()
+
+    items = []
+    for s in skills:
+        latest = await SkillVersion.filter(skill=s).order_by("-created_at").first()
+        items.append({
+            "name": s.name,
+            "display_name": s.display_name,
+            "description": s.description,
+            "author": {"username": s.author.username, "status": s.author.status},
+            "latest_version": latest.version if latest else "",
+            "tags": s.tags,
+            "download_count": s.download_count,
+            "created_at": s.created_at,
+            "updated_at": s.updated_at,
+        })
+    return items, total
+
+
+async def search_skills(q: str | None = None, tags: list[str] | None = None, author_username: str | None = None,
+                        page: int = 1, size: int = 20, sort: str = "downloads") -> tuple[list[dict], int]:
+    qs = Skill.all().prefetch_related("author")
+    if q:
+        qs = qs.filter(Q(name__icontains=q) | Q(display_name__icontains=q) | Q(description__icontains=q))
+    if author_username:
+        qs = qs.filter(author__username=author_username)
+
+    if sort == "downloads":
+        qs = qs.order_by("-download_count")
+    elif sort == "newest":
+        qs = qs.order_by("-created_at")
+
+    skills = await qs.all()
+    if tags:
+        skills = [s for s in skills if all(tag in (s.tags or []) for tag in tags)]
+    total = len(skills)
+    skills = skills[(page - 1) * size:(page - 1) * size + size]
+
+    items = []
+    for s in skills:
+        latest = await SkillVersion.filter(skill=s).order_by("-created_at").first()
+        items.append({
+            "name": s.name,
+            "display_name": s.display_name,
+            "description": s.description,
+            "author": {"username": s.author.username, "status": s.author.status},
+            "latest_version": latest.version if latest else "",
+            "tags": s.tags,
+            "download_count": s.download_count,
+            "created_at": s.created_at,
+            "updated_at": s.updated_at,
+        })
+    return items, total
+
+
+async def get_skill_detail(name: str) -> dict | None:
+    skill = await Skill.filter(name=name).prefetch_related("author").first()
+    if not skill:
+        return None
+    versions = await SkillVersion.filter(skill=skill).order_by("-created_at").all()
+    return {
+        "name": skill.name,
+        "display_name": skill.display_name,
+        "description": skill.description,
+        "author": {"username": skill.author.username, "status": skill.author.status},
+        "tags": skill.tags,
+        "download_count": skill.download_count,
+        "created_at": skill.created_at,
+        "updated_at": skill.updated_at,
+        "versions": [
+            {"version": v.version, "release_notes": v.release_notes, "file_size": v.file_size, "created_at": v.created_at}
+            for v in versions
+        ],
+    }
+
+
+async def get_skill_readme(name: str, version: str | None = None, skills_dir: Path | None = None) -> str:
+    skill = await Skill.filter(name=name).prefetch_related("author").first()
+    if not skill:
+        raise ValueError("skill 不存在")
+    if not version:
+        latest = await SkillVersion.filter(skill=skill).order_by("-created_at").first()
+        if not latest:
+            raise ValueError("没有版本")
+        version = latest.version
+    if skills_dir is None:
+        skills_dir = Path.cwd() / "skills"
+    readme_path = skills_dir / skill.author.username / name / version / "SKILL.md"
+    if not readme_path.exists():
+        raise ValueError("SKILL.md 不存在")
+    return readme_path.read_text(encoding="utf-8")
+
+
+async def download_skill(name: str, version: str | None = None, skills_dir: Path | None = None) -> tuple[Path, str, bytes]:
+    skill = await Skill.filter(name=name).prefetch_related("author").first()
+    if not skill:
+        raise ValueError("skill 不存在")
+    if not version:
+        latest = await SkillVersion.filter(skill=skill).order_by("-created_at").first()
+        if not latest:
+            raise ValueError("没有版本")
+        version = latest.version
+    if skills_dir is None:
+        skills_dir = Path.cwd() / "skills"
+
+    src_dir = skills_dir / skill.author.username / name / version
+    if not src_dir.exists():
+        raise ValueError("版本文件不存在")
+
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        tar.add(str(src_dir), arcname=name)
+
+    skill.download_count += 1
+    await skill.save()
+
+    await DownloadLog.create(skill=skill, version=version)
+
+    filename = f"{name}-v{version}.tar.gz"
+    return src_dir, filename, buf.getvalue()
+
+
+async def delete_skill(name: str, author: User):
+    skill = await Skill.filter(name=name).prefetch_related("author").first()
+    if not skill:
+        raise ValueError("skill 不存在")
+    if skill.author_id != author.id:
+        raise ValueError("无权限删除此 skill")
+
+    config = Config()
+    skill_dir = config.skills_dir / author.username / name
+    if skill_dir.exists():
+        shutil.rmtree(skill_dir)
+    await skill.delete()
+
+
+async def delete_skill_version(name: str, version: str, author: User):
+    skill = await Skill.filter(name=name).prefetch_related("author").first()
+    if not skill:
+        raise ValueError("skill 不存在")
+    if skill.author_id != author.id:
+        raise ValueError("无权限删除此版本")
+
+    ver = await SkillVersion.filter(skill=skill, version=version).first()
+    if not ver:
+        raise ValueError("版本不存在")
+
+    config = Config()
+    version_dir = config.skills_dir / author.username / name / version
+    if version_dir.exists():
+        shutil.rmtree(version_dir)
+    await ver.delete()
+
+    remaining = await SkillVersion.filter(skill=skill).count()
+    if remaining == 0:
+        skill_dir = config.skills_dir / author.username / name
+        if skill_dir.exists():
+            shutil.rmtree(skill_dir)
+        await skill.delete()
+
+
+async def transfer_skill(name: str, target_username: str, actor: User):
+    skill = await Skill.filter(name=name).prefetch_related("author").first()
+    if not skill:
+        raise ValueError("skill 不存在")
+    if skill.author_id != actor.id and not actor.is_admin:
+        raise ValueError("无权限转移此 skill")
+
+    target = await User.filter(username=target_username, status="active").first()
+    if not target:
+        raise ValueError(f"用户 {target_username} 不存在或未激活")
+
+    config = Config()
+    old_dir = config.skills_dir / skill.author.username / name
+    new_dir = config.skills_dir / target_username
+    new_dir.mkdir(parents=True, exist_ok=True)
+    if old_dir.exists():
+        shutil.move(str(old_dir), str(new_dir / name))
+
+    skill.author_id = target.id
+    await skill.save()

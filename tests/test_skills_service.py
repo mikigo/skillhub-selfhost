@@ -72,3 +72,71 @@ async def test_upload_auto_version(config, user, skills_dir):
     versions = await SkillVersion.filter(skill__name="auto-skill").all()
     assert len(versions) == 2
     assert versions[1].version == "1.0.1"
+
+
+@pytest.mark.asyncio
+async def test_list_skills(config, user):
+    tar = make_tar("list-skill")
+    await upload_skill(tar, "List Skill", "desc", ["python"], "1.0.0", user, config.skills_dir)
+    from skillhub_selfhost.skills.service import list_skills
+    items, total = await list_skills(page=1, size=20)
+    assert total >= 1
+
+
+@pytest.mark.asyncio
+async def test_search_skills(config, user):
+    tar = make_tar("search-skill")
+    await upload_skill(tar, "Search Skill", "a unique desc word", ["go"], "1.0.0", user, config.skills_dir)
+    from skillhub_selfhost.skills.service import search_skills
+    items, total = await search_skills(q="unique desc")
+    assert total >= 1
+
+
+@pytest.mark.asyncio
+async def test_filter_by_tag(config, user):
+    tar1 = make_tar("tag-a")
+    tar2 = make_tar("tag-b")
+    await upload_skill(tar1, "Tag A", "desc", ["python", "linter"], "1.0.0", user, config.skills_dir)
+    await upload_skill(tar2, "Tag B", "desc", ["python"], "1.0.0", user, config.skills_dir)
+    from skillhub_selfhost.skills.service import search_skills
+    items, _ = await search_skills(tags=["python", "linter"])
+    assert len(items) >= 1
+
+
+@pytest.mark.asyncio
+async def test_download_increments_count(config, user):
+    tar = make_tar("dl-count")
+    await upload_skill(tar, "DL Count", "desc", [], "1.0.0", user, config.skills_dir)
+    from skillhub_selfhost.skills.service import download_skill
+    path, filename, content = await download_skill("dl-count")
+    skill = await Skill.filter(name="dl-count").first()
+    assert skill.download_count == 1
+
+
+@pytest.mark.asyncio
+async def test_get_skill_detail(config, user):
+    tar = make_tar("detail-test")
+    await upload_skill(tar, "Detail Test", "desc", ["x"], "1.0.0", user, config.skills_dir)
+    from skillhub_selfhost.skills.service import get_skill_detail
+    detail = await get_skill_detail("detail-test")
+    assert detail["name"] == "detail-test"
+    assert len(detail["versions"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_get_readme(config, user):
+    tar = make_tar("readme-test")
+    await upload_skill(tar, "Readme Test", "desc", [], "1.0.0", user, config.skills_dir)
+    from skillhub_selfhost.skills.service import get_skill_readme
+    content = await get_skill_readme("readme-test", skills_dir=config.skills_dir)
+    assert "# Test" in content
+
+
+@pytest.mark.asyncio
+async def test_delete_skill(config, user):
+    tar = make_tar("delete-test")
+    await upload_skill(tar, "Delete", "desc", [], "1.0.0", user, config.skills_dir)
+    from skillhub_selfhost.skills.service import delete_skill
+    await delete_skill("delete-test", user)
+    s = await Skill.filter(name="delete-test").first()
+    assert s is None
