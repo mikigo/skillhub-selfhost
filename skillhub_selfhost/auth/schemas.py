@@ -1,6 +1,7 @@
 # skillhub_selfhost/auth/schemas.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
+from uuid import UUID
 
 class RegisterRequest(BaseModel):
     username: str = Field(min_length=1, max_length=64)
@@ -25,3 +26,10 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def coerce_id_to_str(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
