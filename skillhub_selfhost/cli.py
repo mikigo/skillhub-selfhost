@@ -27,26 +27,35 @@ def server_start(
     port: int = typer.Option(8000, help="监听端口"),
 ):
     """启动 skillhub 服务"""
-    import uvicorn
+    import sys
     import asyncio
     from skillhub_selfhost.config import Config
     from skillhub_selfhost.db import init_db
     from skillhub_selfhost.logging_config import setup_logging
 
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     config = Config(host=host, port=port)
     setup_logging(config.base_dir, config.log_level)
-
     config.skills_dir.mkdir(parents=True, exist_ok=True)
-    asyncio.run(init_db(config.db_url))
 
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(init_db(config.db_url))
+    loop.close()
+
+    import uvicorn
     typer.echo(f"skillhub 启动: http://{host}:{port}")
-    uvicorn.run(
-        "skillhub_selfhost.main:create_app",
-        factory=True,
-        host=host,
-        port=port,
-        log_config=None,
-    )
+    try:
+        uvicorn.run(
+            "skillhub_selfhost.main:create_app",
+            factory=True,
+            host=host,
+            port=port,
+            log_config=None,
+        )
+    except KeyboardInterrupt:
+        typer.echo("服务已停止")
 
 if __name__ == "__main__":
     app()
