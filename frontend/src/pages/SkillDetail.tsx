@@ -89,8 +89,8 @@ export default function SkillDetail() {
         <span className="text-sm text-gray-500">{skill.display_name} @ {selectedVersion}</span>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2">
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-9">
           <Card>
             <CardContent className="p-6 md-p">
               <ReactMarkdown
