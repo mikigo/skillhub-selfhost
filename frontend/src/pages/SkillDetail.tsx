@@ -107,7 +107,7 @@ export default function SkillDetail() {
           <Card>
             <CardContent className="p-6">
               {frontmatter && (
-                <pre className="text-xs text-gray-500 font-mono bg-gray-50 rounded p-3 mb-4 overflow-x-auto border">
+                <pre className="text-xs text-gray-500 font-mono bg-gray-50 rounded p-3 mb-4 overflow-x-auto border whitespace-pre-wrap break-words">
                   {frontmatter}
                 </pre>
               )}
@@ -125,7 +125,7 @@ export default function SkillDetail() {
                       const isInline = !className
                       return isInline
                         ? <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono" {...props}>{children}</code>
-                        : <code className="block bg-gray-900 text-gray-100 rounded p-3 text-sm font-mono overflow-x-auto mb-3" {...props}>{children}</code>
+                        : <code className="block bg-gray-900 text-gray-100 rounded p-3 text-sm font-mono overflow-x-auto mb-3 whitespace-pre-wrap break-words" {...props}>{children}</code>
                     },
                     pre: ({ children }) => <pre className="mb-3">{children}</pre>,
                     blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-3">{children}</blockquote>,
