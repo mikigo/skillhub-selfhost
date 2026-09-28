@@ -68,6 +68,10 @@ async def upload_skill(
         dup = await SkillVersion.filter(skill=existing, version=version).first()
         if dup:
             raise ValueError(f"版本 {version} 已存在")
+        existing.display_name = display_name
+        existing.description = description
+        existing.tags = tags
+        await existing.save()
     else:
         existing = await Skill.create(
             name=skill_name,
