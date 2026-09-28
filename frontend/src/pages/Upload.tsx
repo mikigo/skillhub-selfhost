@@ -8,73 +8,85 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Badge } from '../components/ui/badge'
 import { Card, CardContent } from '../components/ui/card'
-import { ArrowLeft, Upload as UploadIcon, FolderOpen, X, Loader2 } from 'lucide-react'
+import { ArrowLeft, FolderOpen, X, Loader2 } from 'lucide-react'
 
-function pad512(n: number): number {
-  return Math.ceil(n / 512) * 512
+function crc32(data: Uint8Array): number {
+  let crc = 0xFFFFFFFF
+  for (let i = 0; i < data.length; i++) {
+    crc ^= data[i]
+    for (let j = 0; j < 8; j++) {
+      crc = (crc >>> 1) ^ (crc & 1 ? 0xEDB88320 : 0)
+    }
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0
 }
 
-function octal(n: number, digits: number): string {
-  return n.toString(8).padStart(digits, '0')
-}
-
-function tarHeader(name: string, size: number): Uint8Array {
-  const header = new Uint8Array(512)
+function createZip(files: { name: string; data: Uint8Array }[]): Blob {
   const encoder = new TextEncoder()
-  const set = (offset: number, value: string) => {
-    header.set(encoder.encode(value).slice(0, value.length), offset)
-  }
-  set(0, name.slice(0, 100))
-  set(100, octal(0o644, 7) + '\0')
-  set(108, octal(0, 7) + '\0')
-  set(116, octal(0, 7) + '\0')
-  set(124, octal(size, 11) + ' ')
-  set(136, octal(Math.floor(Date.now() / 1000), 11) + ' ')
-  set(148, '        ')
-  set(156, '0')
-  set(257, 'ustar\0')
-  set(263, '00')
-
-  let sum = 0
-  for (let i = 0; i < 512; i++) {
-    sum += i >= 148 && i < 156 ? 32 : header[i]
-  }
-  set(148, octal(sum, 6) + '\0 ')
-  return header
-}
-
-async function createTarGz(files: { name: string; data: Uint8Array }[]): Promise<Blob> {
-  const chunks: Uint8Array[] = []
+  const fileChunks: Uint8Array[] = []
+  const centralEntries: { header: Uint8Array; offset: number }[] = []
+  let offset = 0
 
   for (const f of files) {
-    chunks.push(tarHeader(f.name, f.data.length))
-    const padded = new Uint8Array(pad512(f.data.length))
-    padded.set(f.data)
-    chunks.push(padded)
+    const nameBytes = encoder.encode(f.name)
+    const crc = crc32(f.data)
+
+    const localHeader = new Uint8Array(30 + nameBytes.length)
+    const lh = new DataView(localHeader.buffer)
+    lh.setUint32(0, 0x04034b50, true)
+    lh.setUint16(8, 0, true)
+    lh.setUint32(14, crc, true)
+    lh.setUint32(18, f.data.length, true)
+    lh.setUint32(22, f.data.length, true)
+    lh.setUint16(26, nameBytes.length, true)
+    localHeader.set(nameBytes, 30)
+
+    const centHeader = new Uint8Array(46 + nameBytes.length)
+    const ch = new DataView(centHeader.buffer)
+    ch.setUint32(0, 0x02014b50, true)
+    ch.setUint32(16, crc, true)
+    ch.setUint32(20, f.data.length, true)
+    ch.setUint32(24, f.data.length, true)
+    ch.setUint16(28, nameBytes.length, true)
+    ch.setUint32(42, offset, true)
+    centHeader.set(nameBytes, 46)
+
+    fileChunks.push(localHeader, f.data)
+    centralEntries.push({ header: centHeader, offset })
+    offset += localHeader.length + f.data.length
   }
 
-  chunks.push(new Uint8Array(1024))
+  const centBufs = centralEntries.map(c => c.header)
+  const centStart = offset
+  const centSize = centBufs.reduce((s, c) => s + c.length, 0)
 
-  const totalLen = chunks.reduce((s, c) => s + c.length, 0)
-  const tar = new Uint8Array(totalLen)
-  let offset = 0
-  for (const c of chunks) {
-    tar.set(c, offset)
-    offset += c.length
-  }
+  const eocd = new Uint8Array(22)
+  const ev = new DataView(eocd.buffer)
+  ev.setUint32(0, 0x06054b50, true)
+  ev.setUint16(8, files.length, true)
+  ev.setUint16(10, files.length, true)
+  ev.setUint32(12, centSize, true)
+  ev.setUint32(16, centStart, true)
 
-  const stream = new Blob([tar]).stream()
-  const compressed = stream.pipeThrough(new CompressionStream('gzip'))
-  return new Response(compressed).blob()
+  const all: BlobPart[] = [...fileChunks, ...centBufs, eocd] as any
+  return new Blob(all, { type: 'application/zip' })
 }
 
-async function readFilesFromEntry(entry: FileSystemDirectoryEntry): Promise<{ name: string; data: Uint8Array }[]> {
+async function readFilesFromEntry(entry: FileSystemDirectoryEntry, root: boolean = true): Promise<{ name: string; data: Uint8Array }[]> {
   const results: { name: string; data: Uint8Array }[] = []
 
   async function walk(dir: FileSystemDirectoryEntry, prefix: string) {
     const entries = await new Promise<FileSystemEntry[]>((resolve, reject) => {
       const reader = dir.createReader()
-      reader.readEntries(resolve, reject)
+      const readAll: FileSystemEntry[] = []
+      function next() {
+        reader.readEntries((batch) => {
+          if (batch.length === 0) { resolve(readAll); return }
+          readAll.push(...batch)
+          next()
+        }, reject)
+      }
+      next()
     })
 
     for (const e of entries) {
@@ -91,7 +103,7 @@ async function readFilesFromEntry(entry: FileSystemDirectoryEntry): Promise<{ na
     }
   }
 
-  await walk(entry, '')
+  await walk(entry, root ? '' : entry.name)
   return results
 }
 
@@ -105,31 +117,31 @@ async function readFilesFromFileList(files: FileList): Promise<{ name: string; d
   return results
 }
 
-async function handleDropFolder(
-  e: React.DragEvent,
-  onDone: (files: { name: string; data: Uint8Array }[], folderName: string) => void,
-) {
-  e.preventDefault()
-  const items = e.dataTransfer.items
-  if (items.length === 0) return
-
-  const all: { name: string; data: Uint8Array }[] = []
-
-  for (const item of Array.from(items)) {
-    const entry = (item as any).webkitGetAsEntry?.()
-    if (!entry) continue
-
-    const tree = await readFilesFromEntry(entry)
-    const folder = entry.name
-    for (const f of tree) {
-      all.push({ name: `${folder}/${f.name}`, data: f.data })
+async function listFilesFromEntry(entry: FileSystemDirectoryEntry): Promise<number> {
+  let count = 0
+  async function countFiles(dir: FileSystemDirectoryEntry) {
+    const entries = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+      const reader = dir.createReader()
+      const all: FileSystemEntry[] = []
+      function next() {
+        reader.readEntries((batch) => {
+          if (batch.length === 0) { resolve(all); return }
+          all.push(...batch)
+          next()
+        }, reject)
+      }
+      next()
+    })
+    for (const e of entries) {
+      if (e.isDirectory) {
+        await countFiles(e as FileSystemDirectoryEntry)
+      } else {
+        count++
+      }
     }
   }
-
-  if (all.length > 0) {
-    const firstEntry = (items[0] as any).webkitGetAsEntry?.()
-    onDone(all, firstEntry?.name || 'skill')
-  }
+  await countFiles(entry)
+  return count
 }
 
 export default function Upload() {
@@ -146,21 +158,40 @@ export default function Upload() {
   const [version, setVersion] = useState('')
   const [releaseNotes, setReleaseNotes] = useState('')
   const [uploading, setUploading] = useState(false)
-  const [compressing, setCompressing] = useState(false)
 
   if (!user) { navigate('/login'); return null }
 
-  async function handleFiles(files: { name: string; data: Uint8Array }[], name: string) {
-    setCompressing(true)
-    setRawFiles(files)
-    setFolderName(name)
-    setFileCount(files.length)
-    setDisplayName(name)
-    try {
-      await createTarGz(files)
-    } finally {
-      setCompressing(false)
+  async function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    const items = e.dataTransfer.items
+    if (items.length === 0) return
+    const all: { name: string; data: Uint8Array }[] = []
+    let name = ''
+    for (const item of Array.from(items)) {
+      const entry = (item as any).webkitGetAsEntry?.()
+      if (!entry || !entry.isDirectory) continue
+      name = entry.name
+      const tree = await readFilesFromEntry(entry, false)
+      for (const f of tree) all.push(f)
+      break
     }
+    if (all.length > 0) {
+      setRawFiles(all)
+      setFolderName(name)
+      setFileCount(all.length)
+      setDisplayName(name)
+    }
+  }
+
+  async function handleSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    const name = files[0].webkitRelativePath?.split('/')[0] || 'skill'
+    const all = await readFilesFromFileList(files)
+    setRawFiles(all)
+    setFolderName(name)
+    setFileCount(all.length)
+    setDisplayName(name)
   }
 
   async function handleUpload(e: React.FormEvent) {
@@ -168,9 +199,9 @@ export default function Upload() {
     if (rawFiles.length === 0) { toast.error('请选择文件夹'); return }
     setUploading(true)
     try {
-      const tarBlob = await createTarGz(rawFiles)
+      const zipBlob = createZip(rawFiles)
       const formData = new FormData()
-      formData.append('file', tarBlob, `${folderName}.tar.gz`)
+      formData.append('file', zipBlob, `${folderName}.zip`)
       formData.append('display_name', displayName)
       formData.append('description', description)
       formData.append('tags', JSON.stringify(tags))
@@ -193,10 +224,7 @@ export default function Upload() {
 
   function addTag() {
     const t = tagInput.trim()
-    if (t && !tags.includes(t)) {
-      setTags([...tags, t])
-      setTagInput('')
-    }
+    if (t && !tags.includes(t)) { setTags([...tags, t]); setTagInput('') }
   }
 
   return (
@@ -211,7 +239,7 @@ export default function Upload() {
             <div
               className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50"
               onDragOver={e => e.preventDefault()}
-              onDrop={e => handleDropFolder(e, handleFiles)}
+              onDrop={handleDrop}
               onClick={() => inputRef.current?.click()}
             >
               <input
@@ -219,19 +247,9 @@ export default function Upload() {
                 type="file"
                 {...({ webkitdirectory: '', directory: '' } as any)}
                 className="hidden"
-                onChange={async e => {
-                  const files = e.target.files
-                  if (!files || files.length === 0) return
-                  const name = files[0].webkitRelativePath?.split('/')[0] || 'skill'
-                  const all = await readFilesFromFileList(files)
-                  handleFiles(all, name)
-                }}
+                onChange={handleSelect}
               />
-              {compressing ? (
-                <Loader2 className="h-8 w-8 mx-auto text-gray-400 mb-2 animate-spin" />
-              ) : (
-                <FolderOpen className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-              )}
+              <FolderOpen className="h-8 w-8 mx-auto text-gray-400 mb-2" />
               <p className="text-sm text-gray-500">
                 {folderName
                   ? `${folderName} (${fileCount} 个文件)`

@@ -92,7 +92,7 @@ async def download(name: str, version: str | None = Query(None)):
         _, filename, content = await download_skill(name, version, config.skills_dir)
         return StreamingResponse(
             io.BytesIO(content),
-            media_type="application/gzip",
+            media_type="application/zip",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
     except ValueError as e:

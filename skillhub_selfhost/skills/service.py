@@ -1,8 +1,9 @@
 # skillhub_selfhost/skills/service.py
 import io
-import tarfile
+import zipfile
 import re
 import shutil
+import os
 from pathlib import Path
 from tortoise.expressions import Q
 from skillhub_selfhost.skills.models import Skill, SkillVersion, DownloadLog
@@ -13,14 +14,14 @@ SKILL_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_.-]*$")
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 
 
-def _extract_skill_name_from_tar(file_content: bytes) -> str:
+def _extract_skill_name_from_zip(file_content: bytes) -> str:
     buf = io.BytesIO(file_content)
-    with tarfile.open(fileobj=buf, mode="r:gz") as tar:
-        for member in tar.getmembers():
-            parts = member.name.split("/", 1)
+    with zipfile.ZipFile(buf) as zf:
+        for name in zf.namelist():
+            parts = name.split("/", 1)
             if len(parts) >= 2 and parts[1] == "SKILL.md":
                 return parts[0]
-    raise ValueError("tar.gz 内必须包含 SKILL.md，且文件需放在以 skill 名称命名的根目录下")
+    raise ValueError("zip 内必须包含 SKILL.md，且文件需放在以 skill 名称命名的根目录下")
 
 
 def _validate_skill_name(name: str):
@@ -48,7 +49,7 @@ async def upload_skill(
     skills_dir: Path,
     release_notes: str | None = None,
 ) -> Skill:
-    skill_name = _extract_skill_name_from_tar(file_content)
+    skill_name = _extract_skill_name_from_zip(file_content)
     _validate_skill_name(skill_name)
 
     existing = await Skill.filter(name=skill_name).prefetch_related("author").first()
@@ -82,18 +83,17 @@ async def upload_skill(
     version_dir.mkdir(parents=True, exist_ok=True)
 
     buf = io.BytesIO(file_content)
-    with tarfile.open(fileobj=buf, mode="r:gz") as tar:
-        for member in tar.getmembers():
-            rel = member.name[len(skill_name) + 1:]
+    with zipfile.ZipFile(buf) as zf:
+        for member in zf.namelist():
+            rel = member[len(skill_name) + 1:]
             if not rel or ".." in rel or rel.startswith("/"):
                 continue
             target = version_dir / rel
-            if member.isdir():
+            if member.endswith("/"):
                 target.mkdir(parents=True, exist_ok=True)
-            elif member.isfile():
+            else:
                 target.parent.mkdir(parents=True, exist_ok=True)
-                with tar.extractfile(member) as src:
-                    target.write_bytes(src.read())
+                target.write_bytes(zf.read(member))
 
     await SkillVersion.create(
         skill=existing,
@@ -223,15 +223,19 @@ async def download_skill(name: str, version: str | None = None, skills_dir: Path
         raise ValueError("版本文件不存在")
 
     buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-        tar.add(str(src_dir), arcname=name)
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk(src_dir):
+            for file in files:
+                file_path = Path(root) / file
+                arcname = str(Path(name) / file_path.relative_to(src_dir))
+                zf.write(file_path, arcname)
 
     skill.download_count += 1
     await skill.save()
 
     await DownloadLog.create(skill=skill, version=version)
 
-    filename = f"{name}-v{version}.tar.gz"
+    filename = f"{name}-v{version}.zip"
     return src_dir, filename, buf.getvalue()
 
 

@@ -1,6 +1,6 @@
 # tests/test_skills_service.py
 import io
-import tarfile
+import zipfile
 import pytest
 from skillhub_selfhost.skills.service import upload_skill
 from skillhub_selfhost.skills.models import Skill, SkillVersion
@@ -8,14 +8,11 @@ from skillhub_selfhost.auth.models import User
 from skillhub_selfhost.config import Config
 
 
-def make_tar(skill_name: str, has_skill_md: bool = True) -> bytes:
+def make_zip(skill_name: str, has_skill_md: bool = True) -> bytes:
     buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+    with zipfile.ZipFile(buf, "w") as zf:
         if has_skill_md:
-            content = b"# Test"
-            info = tarfile.TarInfo(name=f"{skill_name}/SKILL.md")
-            info.size = len(content)
-            tar.addfile(info, io.BytesIO(content))
+            zf.writestr(f"{skill_name}/SKILL.md", "# Test")
     return buf.getvalue()
 
 
@@ -31,7 +28,7 @@ async def user():
 
 @pytest.mark.asyncio
 async def test_upload_new_skill(config, user, skills_dir):
-    tar_bytes = make_tar("my-linter")
+    tar_bytes = make_zip("my-linter")
     skill = await upload_skill(
         file_content=tar_bytes,
         display_name="My Linter",
@@ -51,14 +48,14 @@ async def test_upload_new_skill(config, user, skills_dir):
 
 @pytest.mark.asyncio
 async def test_upload_missing_skill_md(config, user, skills_dir):
-    tar_bytes = make_tar("bad-skill", has_skill_md=False)
+    tar_bytes = make_zip("bad-skill", has_skill_md=False)
     with pytest.raises(ValueError, match="必须包含 SKILL.md"):
         await upload_skill(tar_bytes, "Bad", "desc", [], "1.0.0", user, skills_dir)
 
 
 @pytest.mark.asyncio
 async def test_upload_duplicate_version(config, user, skills_dir):
-    tar_bytes = make_tar("dup-skill")
+    tar_bytes = make_zip("dup-skill")
     await upload_skill(tar_bytes, "Dup", "desc", [], "1.0.0", user, skills_dir)
     with pytest.raises(ValueError, match="已存在"):
         await upload_skill(tar_bytes, "Dup2", "desc2", [], "1.0.0", user, skills_dir)
@@ -66,7 +63,7 @@ async def test_upload_duplicate_version(config, user, skills_dir):
 
 @pytest.mark.asyncio
 async def test_upload_auto_version(config, user, skills_dir):
-    tar_bytes = make_tar("auto-skill")
+    tar_bytes = make_zip("auto-skill")
     await upload_skill(tar_bytes, "Auto", "desc", [], "1.0.0", user, skills_dir)
     skill2 = await upload_skill(tar_bytes, "Auto", "desc", [], "", user, skills_dir)
     versions = await SkillVersion.filter(skill__name="auto-skill").all()
@@ -76,7 +73,7 @@ async def test_upload_auto_version(config, user, skills_dir):
 
 @pytest.mark.asyncio
 async def test_list_skills(config, user):
-    tar = make_tar("list-skill")
+    tar = make_zip("list-skill")
     await upload_skill(tar, "List Skill", "desc", ["python"], "1.0.0", user, config.skills_dir)
     from skillhub_selfhost.skills.service import list_skills
     items, total = await list_skills(page=1, size=20)
@@ -85,7 +82,7 @@ async def test_list_skills(config, user):
 
 @pytest.mark.asyncio
 async def test_search_skills(config, user):
-    tar = make_tar("search-skill")
+    tar = make_zip("search-skill")
     await upload_skill(tar, "Search Skill", "a unique desc word", ["go"], "1.0.0", user, config.skills_dir)
     from skillhub_selfhost.skills.service import search_skills
     items, total = await search_skills(q="unique desc")
@@ -94,8 +91,8 @@ async def test_search_skills(config, user):
 
 @pytest.mark.asyncio
 async def test_filter_by_tag(config, user):
-    tar1 = make_tar("tag-a")
-    tar2 = make_tar("tag-b")
+    tar1 = make_zip("tag-a")
+    tar2 = make_zip("tag-b")
     await upload_skill(tar1, "Tag A", "desc", ["python", "linter"], "1.0.0", user, config.skills_dir)
     await upload_skill(tar2, "Tag B", "desc", ["python"], "1.0.0", user, config.skills_dir)
     from skillhub_selfhost.skills.service import search_skills
@@ -105,7 +102,7 @@ async def test_filter_by_tag(config, user):
 
 @pytest.mark.asyncio
 async def test_download_increments_count(config, user):
-    tar = make_tar("dl-count")
+    tar = make_zip("dl-count")
     await upload_skill(tar, "DL Count", "desc", [], "1.0.0", user, config.skills_dir)
     from skillhub_selfhost.skills.service import download_skill
     path, filename, content = await download_skill("dl-count")
@@ -115,7 +112,7 @@ async def test_download_increments_count(config, user):
 
 @pytest.mark.asyncio
 async def test_get_skill_detail(config, user):
-    tar = make_tar("detail-test")
+    tar = make_zip("detail-test")
     await upload_skill(tar, "Detail Test", "desc", ["x"], "1.0.0", user, config.skills_dir)
     from skillhub_selfhost.skills.service import get_skill_detail
     detail = await get_skill_detail("detail-test")
@@ -125,7 +122,7 @@ async def test_get_skill_detail(config, user):
 
 @pytest.mark.asyncio
 async def test_get_readme(config, user):
-    tar = make_tar("readme-test")
+    tar = make_zip("readme-test")
     await upload_skill(tar, "Readme Test", "desc", [], "1.0.0", user, config.skills_dir)
     from skillhub_selfhost.skills.service import get_skill_readme
     content = await get_skill_readme("readme-test", skills_dir=config.skills_dir)
@@ -134,7 +131,7 @@ async def test_get_readme(config, user):
 
 @pytest.mark.asyncio
 async def test_delete_skill(config, user):
-    tar = make_tar("delete-test")
+    tar = make_zip("delete-test")
     await upload_skill(tar, "Delete", "desc", [], "1.0.0", user, config.skills_dir)
     from skillhub_selfhost.skills.service import delete_skill
     await delete_skill("delete-test", user)

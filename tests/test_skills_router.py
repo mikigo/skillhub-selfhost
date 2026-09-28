@@ -1,5 +1,5 @@
 import io
-import tarfile
+import zipfile
 import pytest
 from httpx import ASGITransport, AsyncClient
 from skillhub_selfhost.main import create_app
@@ -7,13 +7,10 @@ from skillhub_selfhost.auth.service import register_user, login
 from skillhub_selfhost.config import Config
 
 
-def make_tar(skill_name: str) -> bytes:
+def make_zip(skill_name: str) -> bytes:
     buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-        content = b"# Test"
-        info = tarfile.TarInfo(name=f"{skill_name}/SKILL.md")
-        info.size = len(content)
-        tar.addfile(info, io.BytesIO(content))
+    with zipfile.ZipFile(buf, "w") as zf:
+        zf.writestr(f"{skill_name}/SKILL.md", "# Test")
     return buf.getvalue()
 
 
@@ -42,8 +39,8 @@ async def auth_client(app):
 
 @pytest.mark.asyncio
 async def test_upload_skill(auth_client):
-    tar = make_tar("router-skill")
-    files = {"file": ("skill.tar.gz", tar, "application/gzip")}
+    tar = make_zip("router-skill")
+    files = {"file": ("skill.zip", tar, "application/zip")}
     data = {
         "display_name": "Router Skill",
         "description": "test",
@@ -56,8 +53,8 @@ async def test_upload_skill(auth_client):
 
 @pytest.mark.asyncio
 async def test_get_skill_list(client, auth_client):
-    tar = make_tar("list-r-skill-" + str(hash("test")))
-    files = {"file": ("skill.tar.gz", tar, "application/gzip")}
+    tar = make_zip("list-r-skill-" + str(hash("test")))
+    files = {"file": ("skill.zip", tar, "application/zip")}
     data = {"display_name": "List", "description": "d", "tags": '["x"]', "version": "1.0.0"}
     await auth_client.post("/api/skills/", files=files, data=data)
     resp = await client.get("/api/skills/")
@@ -69,8 +66,8 @@ async def test_get_skill_list(client, auth_client):
 @pytest.mark.asyncio
 async def test_download_increments_count(client, auth_client):
     name = "count-skill-" + str(hash("count"))
-    tar = make_tar(name)
-    files = {"file": ("skill.tar.gz", tar, "application/gzip")}
+    tar = make_zip(name)
+    files = {"file": ("skill.zip", tar, "application/zip")}
     data = {"display_name": "C", "description": "d", "tags": '[]', "version": "1.0.0"}
     await auth_client.post("/api/skills/", files=files, data=data)
     resp = await client.get(f"/api/skills/{name}/download")

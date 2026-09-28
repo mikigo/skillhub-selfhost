@@ -64,13 +64,8 @@ export default function SkillDetail() {
   async function handleDeleteVersion(version: string) {
     if (!confirm(`确定删除版本 ${version}？`)) return
     const resp = await apiFetch(`/api/skills/${name}/versions/${version}`, { method: 'DELETE' })
-    if (resp.ok) {
-      toast.success('版本已删除')
-      loadSkill()
-    } else {
-      const data = await resp.json()
-      toast.error(data.detail)
-    }
+    if (resp.ok) { toast.success('版本已删除'); loadSkill() }
+    else { const data = await resp.json(); toast.error(data.detail) }
   }
 
   function formatSize(bytes: number) {
@@ -80,6 +75,7 @@ export default function SkillDetail() {
   }
 
   const downloadUrl = `api/skills/${name}/download${selectedVersion ? `?version=${selectedVersion}` : ''}`
+  const cmd = `curl -o ${name}-v${selectedVersion}.zip ${window.location.origin}/${downloadUrl}`
 
   if (loading) return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-96 w-full" /></div>
   if (!skill) return <div className="text-center py-20 text-gray-400">skill 不存在</div>
@@ -90,19 +86,37 @@ export default function SkillDetail() {
         <Link to="/" className="flex items-center text-sm text-gray-500 hover:text-gray-700">
           <ArrowLeft className="h-4 w-4 mr-1" />返回
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">{skill.display_name} @ {selectedVersion}</span>
-          <a href={downloadUrl}>
-            <Button size="sm"><Download className="h-4 w-4 mr-1" />下载 tar.gz</Button>
-          </a>
-        </div>
+        <span className="text-sm text-gray-500">{skill.display_name} @ {selectedVersion}</span>
       </div>
 
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-2">
           <Card>
-            <CardContent className="p-6 prose prose-sm max-w-none">
-              <ReactMarkdown>{readme || '# 暂无 README'}</ReactMarkdown>
+            <CardContent className="p-6 md-p">
+              <ReactMarkdown
+                components={{
+                  h1: ({ children }) => <h1 className="text-2xl font-bold mb-3 mt-6 first:mt-0">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-5">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-lg font-semibold mb-2 mt-4">{children}</h3>,
+                  p: ({ children }) => <p className="mb-3 leading-relaxed">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
+                  li: ({ children }) => <li className="mb-1">{children}</li>,
+                  code: ({ children, className, ...props }: any) => {
+                    const isInline = !className
+                    return isInline
+                      ? <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono" {...props}>{children}</code>
+                      : <code className="block bg-gray-900 text-gray-100 rounded p-3 text-sm font-mono overflow-x-auto mb-3" {...props}>{children}</code>
+                  },
+                  pre: ({ children }) => <pre className="mb-3">{children}</pre>,
+                  blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-3">{children}</blockquote>,
+                  a: ({ children, href }) => <a href={href} className="text-blue-600 underline" target="_blank" rel="noopener">{children}</a>,
+                  hr: () => <hr className="my-4" />,
+                  strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                }}
+              >
+                {readme || '# 暂无 README'}
+              </ReactMarkdown>
             </CardContent>
           </Card>
         </div>
@@ -112,10 +126,8 @@ export default function SkillDetail() {
             <CardContent className="p-4 space-y-3">
               <div>
                 <div className="text-sm text-gray-500 mb-1">安装命令</div>
-                <div className="bg-gray-100 rounded p-2 text-xs font-mono break-all">
-                  curl -o {name}-v{selectedVersion}.tar.gz {window.location.origin}/{downloadUrl}
-                </div>
-                <Button variant="ghost" size="sm" className="mt-1" onClick={() => { navigator.clipboard.writeText(`curl -o ${name}-v${selectedVersion}.tar.gz ${window.location.origin}/${downloadUrl}`); toast.success('已复制') }}>
+                <div className="bg-gray-100 rounded p-2 text-xs font-mono break-all">{cmd}</div>
+                <Button variant="ghost" size="sm" className="mt-1" onClick={() => { navigator.clipboard.writeText(cmd); toast.success('已复制') }}>
                   <Copy className="h-3 w-3 mr-1" />复制
                 </Button>
               </div>
@@ -146,7 +158,7 @@ export default function SkillDetail() {
                       <div className="text-xs text-gray-400">{formatSize(v.file_size)}</div>
                     </div>
                     <div className="flex gap-1">
-                      <a href={`/${downloadUrl}&version=${v.version}`} onClick={e => e.stopPropagation()}>
+                      <a href={`api/skills/${name}/download?version=${v.version}`} onClick={e => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-7 w-7"><Download className="h-3 w-3" /></Button>
                       </a>
                       {isAuthor && (
@@ -160,10 +172,6 @@ export default function SkillDetail() {
               </div>
             </CardContent>
           </Card>
-
-          <a href={downloadUrl}>
-            <Button className="w-full"><Download className="h-4 w-4 mr-1" />下载 tar.gz</Button>
-          </a>
         </div>
       </div>
     </div>
