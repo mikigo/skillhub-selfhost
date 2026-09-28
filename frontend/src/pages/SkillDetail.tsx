@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { toast } from 'sonner'
@@ -25,6 +25,17 @@ interface SkillDetail {
   tags: string[]
   download_count: number
   versions: Version[]
+}
+
+function splitFrontmatter(md: string): { frontmatter: string; body: string } {
+  const trimmed = md.trimStart()
+  if (!trimmed.startsWith('---')) return { frontmatter: '', body: md }
+  const end = trimmed.indexOf('\n---', 3)
+  if (end === -1) return { frontmatter: '', body: md }
+  return {
+    frontmatter: trimmed.slice(3, end).trim(),
+    body: trimmed.slice(end + 4).trimStart(),
+  }
 }
 
 export default function SkillDetail() {
@@ -74,6 +85,8 @@ export default function SkillDetail() {
     return `${(bytes / 1048576).toFixed(1)} MB`
   }
 
+  const { frontmatter, body } = useMemo(() => splitFrontmatter(readme), [readme])
+
   const downloadUrl = `api/skills/${name}/download${selectedVersion ? `?version=${selectedVersion}` : ''}`
   const cmd = `curl -o ${name}-v${selectedVersion}.zip ${window.location.origin}/${downloadUrl}`
 
@@ -92,36 +105,43 @@ export default function SkillDetail() {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-9">
           <Card>
-            <CardContent className="p-6 md-p">
-              <ReactMarkdown
-                components={{
-                  h1: ({ children }) => <h1 className="text-2xl font-bold mb-3 mt-6 first:mt-0">{children}</h1>,
-                  h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-5">{children}</h2>,
-                  h3: ({ children }) => <h3 className="text-lg font-semibold mb-2 mt-4">{children}</h3>,
-                  p: ({ children }) => <p className="mb-3 leading-relaxed">{children}</p>,
-                  ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
-                  ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
-                  li: ({ children }) => <li className="mb-1">{children}</li>,
-                  code: ({ children, className, ...props }: any) => {
-                    const isInline = !className
-                    return isInline
-                      ? <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono" {...props}>{children}</code>
-                      : <code className="block bg-gray-900 text-gray-100 rounded p-3 text-sm font-mono overflow-x-auto mb-3" {...props}>{children}</code>
-                  },
-                  pre: ({ children }) => <pre className="mb-3">{children}</pre>,
-                  blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-3">{children}</blockquote>,
-                  a: ({ children, href }) => <a href={href} className="text-blue-600 underline" target="_blank" rel="noopener">{children}</a>,
-                  hr: () => <hr className="my-4" />,
-                  strong: ({ children }) => <strong className="font-bold">{children}</strong>,
-                }}
-              >
-                {readme || '# 暂无 README'}
-              </ReactMarkdown>
+            <CardContent className="p-6">
+              {frontmatter && (
+                <pre className="text-xs text-gray-500 font-mono bg-gray-50 rounded p-3 mb-4 overflow-x-auto border">
+                  {frontmatter}
+                </pre>
+              )}
+              <div className="md-content">
+                <ReactMarkdown
+                  components={{
+                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-3 mt-6 first:mt-0">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-5">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-semibold mb-2 mt-4">{children}</h3>,
+                    p: ({ children }) => <p className="mb-3 leading-relaxed">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                    code: ({ children, className, ...props }: any) => {
+                      const isInline = !className
+                      return isInline
+                        ? <code className="bg-gray-100 rounded px-1 py-0.5 text-sm font-mono" {...props}>{children}</code>
+                        : <code className="block bg-gray-900 text-gray-100 rounded p-3 text-sm font-mono overflow-x-auto mb-3" {...props}>{children}</code>
+                    },
+                    pre: ({ children }) => <pre className="mb-3">{children}</pre>,
+                    blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-3">{children}</blockquote>,
+                    a: ({ children, href }) => <a href={href} className="text-blue-600 underline" target="_blank" rel="noopener">{children}</a>,
+                    hr: () => <hr className="my-4" />,
+                    strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                  }}
+                >
+                  {body || '# 暂无 README'}
+                </ReactMarkdown>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="space-y-4">
+        <div className="col-span-3 space-y-4">
           <Card>
             <CardContent className="p-4 space-y-3">
               <div>
