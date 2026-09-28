@@ -10,6 +10,14 @@ import { Skeleton } from '../components/ui/skeleton'
 import { Card, CardContent } from '../components/ui/card'
 import { ArrowLeft, Copy, Download, Trash2 } from 'lucide-react'
 
+function stripFrontmatter(md: string): string {
+  const trimmed = md.trimStart()
+  if (!trimmed.startsWith('---')) return md
+  const end = trimmed.indexOf('---', 3)
+  if (end === -1) return md
+  return trimmed.slice(end + 3).trimStart()
+}
+
 interface Version {
   version: string
   release_notes: string | null
@@ -115,7 +123,7 @@ export default function SkillDetail() {
                   strong: ({ children }) => <strong className="font-bold">{children}</strong>,
                 }}
               >
-                {readme || '# 暂无 README'}
+                {stripFrontmatter(readme) || '# 暂无 README'}
               </ReactMarkdown>
             </CardContent>
           </Card>
