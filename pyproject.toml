@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skillhub-selfhost"
+version = "0.1.0"
+description = "A self-hosted AI skill marketplace"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "tortoise-orm[asyncpg]>=0.20.0",
+    "aiosqlite>=0.20.0",
+    "python-multipart>=0.0.9",
+    "bcrypt>=4.1.0",
+    "PyJWT>=2.8.0",
+    "typer>=0.12.0",
+    "aiofiles>=23.2.0",
+]
+license = {text = "Apache-2.0"}
+
+[project.scripts]
+skillhub-selfhost = "skillhub_selfhost.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["skillhub_selfhost*"]
+
+[tool.setuptools.package-data]
+skillhub_selfhost = ["dist/**"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
