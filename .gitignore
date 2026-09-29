@@ -9,12 +9,12 @@ superpowers/
 *.db
 node_modules/
 logs/
-skills/
+/skills/
 # Distribution / packaging
 .Python
 build/
 develop-eggs/
-dist/
+/dist/
 downloads/
 eggs/
 .eggs/
