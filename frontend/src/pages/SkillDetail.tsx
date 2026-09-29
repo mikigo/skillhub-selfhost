@@ -24,6 +24,8 @@ interface SkillDetail {
   display_name: string
   description: string
   author: { username: string; status: string }
+  original_author: string | null
+  source_url: string | null
   tags: string[]
   download_count: number
   versions: Version[]
@@ -184,6 +186,8 @@ export default function SkillDetail() {
               <div>
                 <div className="text-sm text-muted-foreground">{t('skillDetail.basicInfo')}</div>
                 <div className="text-sm mt-1">{t('skillDetail.author')}: <Link to={`/author/${skill.author.username}`} className="text-blue-600 hover:underline">{skill.author.username}</Link></div>
+                {skill.original_author && <div className="text-sm text-muted-foreground">原作者: {skill.original_author}</div>}
+                {skill.source_url && <div className="text-sm text-muted-foreground truncate">来源: <a href={skill.source_url} className="text-blue-600 hover:underline" target="_blank" rel="noopener">{skill.source_url}</a></div>}
                 <div className="text-sm">{t('skillDetail.downloads')}: {skill.download_count.toLocaleString()}</div>
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {skill.tags.map(t => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}

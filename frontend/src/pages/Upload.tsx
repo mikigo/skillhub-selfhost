@@ -151,6 +151,8 @@ export default function Upload() {
   const [tagInput, setTagInput] = useState('')
   const [version, setVersion] = useState('')
   const [releaseNotes, setReleaseNotes] = useState('')
+  const [originalAuthor, setOriginalAuthor] = useState('')
+  const [sourceUrl, setSourceUrl] = useState('')
   const [uploading, setUploading] = useState(false)
 
   async function handleDrop(e: React.DragEvent) {
@@ -201,6 +203,8 @@ export default function Upload() {
       formData.append('tags', JSON.stringify(tags))
       if (version) formData.append('version', version)
       if (releaseNotes) formData.append('release_notes', releaseNotes)
+      if (originalAuthor) formData.append('original_author', originalAuthor)
+      if (sourceUrl) formData.append('source_url', sourceUrl)
 
       const resp = await apiFetch('/api/skills/', { method: 'POST', body: formData })
       if (!resp.ok) {
@@ -266,6 +270,8 @@ export default function Upload() {
             </div>
             <div><Label>{t('upload.version')}</Label><Input value={version} onChange={e => setVersion(e.target.value)} placeholder={t('upload.versionPlaceholder')} /></div>
             <div><Label>{t('upload.releaseNotes')}</Label><Input value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)} /></div>
+            <div><Label>{t('upload.originalAuthor')}</Label><Input value={originalAuthor} onChange={e => setOriginalAuthor(e.target.value)} /></div>
+            <div><Label>{t('upload.sourceUrl')}</Label><Input value={sourceUrl} onChange={e => setSourceUrl(e.target.value)} placeholder="https://github.com/author/skill" /></div>
 
             <Button type="submit" disabled={uploading || rawFiles.length === 0} className="w-full">
               {uploading ? t('upload.uploading') : t('upload.uploadBtn')}

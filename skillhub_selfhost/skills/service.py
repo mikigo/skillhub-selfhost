@@ -48,6 +48,8 @@ async def upload_skill(
     author: User,
     skills_dir: Path,
     release_notes: str | None = None,
+    original_author: str | None = None,
+    source_url: str | None = None,
 ) -> Skill:
     skill_name = _extract_skill_name_from_zip(file_content)
     _validate_skill_name(skill_name)
@@ -71,6 +73,8 @@ async def upload_skill(
         existing.display_name = display_name
         existing.description = description
         existing.tags = tags
+        existing.original_author = original_author
+        existing.source_url = source_url
         await existing.save()
     else:
         existing = await Skill.create(
@@ -79,6 +83,8 @@ async def upload_skill(
             description=description,
             tags=tags,
             author=author,
+            original_author=original_author,
+            source_url=source_url,
         )
 
     file_size = len(file_content)
@@ -127,6 +133,8 @@ async def list_skills(page: int = 1, size: int = 20, sort: str = "downloads") ->
             "display_name": s.display_name,
             "description": s.description,
             "author": {"username": s.author.username, "status": s.author.status},
+            "original_author": s.original_author,
+            "source_url": s.source_url,
             "latest_version": latest.version if latest else "",
             "tags": s.tags,
             "download_count": s.download_count,
@@ -163,6 +171,8 @@ async def search_skills(q: str | None = None, tags: list[str] | None = None, aut
             "display_name": s.display_name,
             "description": s.description,
             "author": {"username": s.author.username, "status": s.author.status},
+            "original_author": s.original_author,
+            "source_url": s.source_url,
             "latest_version": latest.version if latest else "",
             "tags": s.tags,
             "download_count": s.download_count,
@@ -182,6 +192,8 @@ async def get_skill_detail(name: str) -> dict | None:
         "display_name": skill.display_name,
         "description": skill.description,
         "author": {"username": skill.author.username, "status": skill.author.status},
+        "original_author": skill.original_author,
+        "source_url": skill.source_url,
         "tags": skill.tags,
         "download_count": skill.download_count,
         "created_at": skill.created_at,

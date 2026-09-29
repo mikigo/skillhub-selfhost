@@ -13,6 +13,8 @@ class SkillListItem(BaseModel):
     display_name: str
     description: str
     author: AuthorInfo
+    original_author: str | None = None
+    source_url: str | None = None
     latest_version: str
     tags: list[str]
     download_count: int
@@ -36,6 +38,8 @@ class SkillDetailResponse(BaseModel):
     display_name: str
     description: str
     author: AuthorInfo
+    original_author: str | None = None
+    source_url: str | None = None
     tags: list[str]
     download_count: int
     created_at: datetime

@@ -10,6 +10,8 @@ class Skill(Model):
     description = fields.TextField()
     tags = fields.JSONField(default=[])
     author = fields.ForeignKeyField("models.User", related_name="skills")
+    original_author = fields.CharField(max_length=128, null=True)
+    source_url = fields.CharField(max_length=1024, null=True)
     download_count = fields.IntField(default=0)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)

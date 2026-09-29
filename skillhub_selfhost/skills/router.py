@@ -22,6 +22,8 @@ async def upload(
     tags: str = Form("[]"),
     version: str = Form(""),
     release_notes: str | None = Form(None),
+    original_author: str | None = Form(None),
+    source_url: str | None = Form(None),
     user: User = Depends(require_user),
 ):
     if user.status != "active":
@@ -38,6 +40,8 @@ async def upload(
             author=user,
             skills_dir=config.skills_dir,
             release_notes=release_notes,
+            original_author=original_author,
+            source_url=source_url,
         )
     except ValueError as e:
         code = 400 if "格式" in str(e) or "必须" in str(e) else 409

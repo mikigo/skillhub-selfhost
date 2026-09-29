@@ -13,6 +13,8 @@ interface SkillItem {
   display_name: string
   description: string
   author: { username: string; status: string }
+  original_author: string | null
+  source_url: string | null
   latest_version: string
   tags: string[]
   download_count: number
@@ -121,33 +123,31 @@ export default function Home() {
         <div className="text-center py-20 text-muted-foreground">{t('home.empty')}</div>
       ) : (
         <div className="space-y-2">
-          <div className="grid grid-cols-12 gap-4 text-xs text-muted-foreground px-3 py-2 border-b">
-            <span className="col-span-1">{t('home.headerNum')}</span>
-            <span className="col-span-4">{t('home.headerSkill')}</span>
-            <span className="col-span-2">{t('home.headerAuthor')}</span>
-            <span className="col-span-2">{t('home.headerVersion')}</span>
-            <span className="col-span-2">{t('home.headerTags')}</span>
-            <span className="col-span-1 text-right">{t('home.headerDownloads')}</span>
+          <div className="grid gap-3 text-xs text-muted-foreground px-3 py-2 border-b" style={{ gridTemplateColumns: '1fr 15fr 2fr 2fr' }}>
+            <span>{t('home.headerNum')}</span>
+            <span>{t('home.headerSkill')}</span>
+            <span>{t('home.headerAuthor')}</span>
+            <span className="text-right">{t('home.headerDownloads')}</span>
           </div>
           {skills.map((skill, i) => (
             <Link
               key={skill.name}
               to={`/skills/${skill.name}`}
-              className="grid grid-cols-12 gap-4 px-3 py-2 rounded hover:bg-muted items-center"
+              className="grid gap-3 px-3 py-2 rounded hover:bg-muted items-center"
+              style={{ gridTemplateColumns: '1fr 15fr 2fr 2fr' }}
             >
-              <span className="col-span-1 text-sm text-muted-foreground">{(page - 1) * PAGE_SIZE + i + 1}</span>
-              <div className="col-span-4">
-                <div className="font-medium">{skill.display_name}</div>
+              <span className="text-sm text-muted-foreground">{(page - 1) * PAGE_SIZE + i + 1}</span>
+              <div className="min-w-0" title={skill.description}>
+                <div className="font-medium truncate">{skill.display_name}</div>
                 <div className="text-xs text-muted-foreground truncate">{skill.description}</div>
               </div>
-<Link to={`/author/${skill.author.username}`} className="col-span-2 text-sm text-muted-foreground hover:text-blue-500">
-                {skill.author.username}
-              </Link>
-              <span className="col-span-2 text-sm text-muted-foreground">{skill.latest_version}</span>
-              <span className="col-span-2 flex gap-1 flex-wrap">
-                {skill.tags.slice(0, 3).map(t => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
-              </span>
-              <span className="col-span-1 text-sm text-right text-muted-foreground">{skill.download_count.toLocaleString()}</span>
+<div className="min-w-0">
+                <Link to={`/author/${skill.author.username}`} className="text-sm text-muted-foreground hover:text-blue-500 truncate">
+                  {skill.author.username}
+                </Link>
+                {skill.original_author && <div className="text-xs text-muted-foreground truncate">{skill.original_author}</div>}
+              </div>
+              <span className="text-sm text-right text-muted-foreground">{skill.download_count.toLocaleString()}</span>
             </Link>
           ))}
         </div>
