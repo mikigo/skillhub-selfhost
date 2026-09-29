@@ -1,4 +1,4 @@
-# SkillHub
+# SkillHub-SelfHost
 
 一个自托管的 AI Agent 技能市场。帮助团队搜索、上传、版本管理和共享可复用的 AI 能力模块。
 
