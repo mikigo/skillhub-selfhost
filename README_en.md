@@ -28,9 +28,13 @@ AI agents benefit from domain-specific knowledge and toolchain integrations pack
 ### Screenshots
 
 <p align="center">
-  <img src="website/public/dark.png" alt="SkillHub Dark Theme" width="32%">
-  <img src="website/public/white.png" alt="SkillHub Light Theme" width="32%">
-  <img src="website/public/login.png" alt="SkillHub Login" width="32%">
+  <img src="website/public/home.png" alt="Home" width="32%">
+  <img src="website/public/upload.png" alt="Upload" width="32%">
+  <img src="website/public/myskill.png" alt="My Skills" width="32%">
+</p>
+<p align="center">
+  <img src="website/public/dark.png" alt="Dark Theme" width="32%">
+  <img src="website/public/white.png" alt="Light Theme" width="32%">
 </p>
 
 ---

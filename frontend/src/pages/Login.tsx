@@ -49,11 +49,11 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="username">{t('auth.username')}</Label>
-              <Input id="username" value={username} onChange={e => setUsername(e.target.value)} required />
+              <Input id="username" name="username" autoComplete="username" spellCheck={false} value={username} onChange={e => setUsername(e.target.value)} required />
             </div>
             <div>
               <Label htmlFor="password">{t('auth.password')}</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+              <Input id="password" name="password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? t('auth.loggingIn') : t('auth.loginBtn')}

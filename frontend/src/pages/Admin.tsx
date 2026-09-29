@@ -94,8 +94,8 @@ export default function Admin() {
           <DialogContent>
             <DialogHeader><DialogTitle>{t('admin.createTitle')}</DialogTitle></DialogHeader>
             <form onSubmit={createUser} className="space-y-3">
-              <div><Label>{t('auth.username')}</Label><Input value={newUsername} onChange={e => setNewUsername(e.target.value)} required /></div>
-              <div><Label>{t('auth.password')}</Label><Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required /></div>
+              <div><Label>{t('auth.username')}</Label><Input name="username" autoComplete="username" spellCheck={false} value={newUsername} onChange={e => setNewUsername(e.target.value)} required /></div>
+              <div><Label>{t('auth.password')}</Label><Input name="password" type="password" autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required /></div>
               <Button type="submit">{t('admin.createUser')}</Button>
             </form>
           </DialogContent>

@@ -49,15 +49,15 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="username">{t('auth.username')}</Label>
-              <Input id="username" value={username} onChange={e => setUsername(e.target.value)} required />
+              <Input id="username" name="username" autoComplete="username" spellCheck={false} value={username} onChange={e => setUsername(e.target.value)} required />
             </div>
             <div>
               <Label htmlFor="password">{t('auth.password')}</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+              <Input id="password" name="password" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
             <div>
               <Label htmlFor="confirm">{t('auth.confirmPassword')}</Label>
-              <Input id="confirm" type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
+              <Input id="confirm" name="confirm" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} required />
             </div>
             <p className="text-xs text-muted-foreground">{t('auth.pendingNote')}</p>
             <Button type="submit" className="w-full" disabled={loading}>

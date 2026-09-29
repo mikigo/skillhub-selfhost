@@ -18,7 +18,7 @@ class Config:
     logo_text: str = "SkillHub"
     logo: str = ""
     favicon: str = ""
-    default_lang: str = "en"
+    default_lang: str = "zh"
 
     def __post_init__(self):
         self._load_config_json()

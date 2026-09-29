@@ -78,6 +78,9 @@ export default function Home() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-10"
+            name="q"
+            autoComplete="off"
+            spellCheck={false}
             placeholder={t('home.search')}
             value={q}
             onChange={e => setQ(e.target.value)}
@@ -123,10 +126,9 @@ export default function Home() {
         <div className="text-center py-20 text-muted-foreground">{t('home.empty')}</div>
       ) : (
         <div className="space-y-2">
-          <div className="grid gap-3 text-xs text-muted-foreground px-3 py-2 border-b" style={{ gridTemplateColumns: '1fr 15fr 2fr 2fr' }}>
+          <div className="grid gap-3 text-xs text-muted-foreground px-3 py-2 border-b" style={{ gridTemplateColumns: '1fr 15fr 3fr' }}>
             <span>{t('home.headerNum')}</span>
             <span>{t('home.headerSkill')}</span>
-            <span>{t('home.headerAuthor')}</span>
             <span className="text-right">{t('home.headerDownloads')}</span>
           </div>
           {skills.map((skill, i) => (
@@ -134,18 +136,12 @@ export default function Home() {
               key={skill.name}
               to={`/skills/${skill.name}`}
               className="grid gap-3 px-3 py-2 rounded hover:bg-muted items-center"
-              style={{ gridTemplateColumns: '1fr 15fr 2fr 2fr' }}
+              style={{ gridTemplateColumns: '1fr 15fr 3fr' }}
             >
               <span className="text-sm text-muted-foreground">{(page - 1) * PAGE_SIZE + i + 1}</span>
               <div className="min-w-0" title={skill.description}>
                 <div className="font-medium truncate">{skill.display_name}</div>
                 <div className="text-xs text-muted-foreground truncate">{skill.description}</div>
-              </div>
-<div className="min-w-0">
-                <Link to={`/author/${skill.author.username}`} className="text-sm text-muted-foreground hover:text-blue-500 truncate">
-                  {skill.author.username}
-                </Link>
-                {skill.original_author && <div className="text-xs text-muted-foreground truncate">{skill.original_author}</div>}
               </div>
               <span className="text-sm text-right text-muted-foreground">{skill.download_count.toLocaleString()}</span>
             </Link>

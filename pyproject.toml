@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skillhub-selfhost"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A self-hosted AI skill marketplace"
 requires-python = ">=3.8"
 dependencies = [
@@ -19,6 +19,9 @@ dependencies = [
     "aiofiles>=23.2.0",
 ]
 license = {text = "Apache-2.0"}
+
+[tool.setuptools.dynamic]
+version = {attr = "skillhub_selfhost.__version__.__version__"}
 
 [project.scripts]
 skillhub-selfhost = "skillhub_selfhost.cli:app"

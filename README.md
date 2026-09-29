@@ -28,9 +28,13 @@ AI Agent 通过可复用的模块（"技能"）获取领域知识和工具链集
 ### 截图展示
 
 <p align="center">
+  <img src="website/public/home.png" alt="主页" width="32%">
+  <img src="website/public/upload.png" alt="上传" width="32%">
+  <img src="website/public/myskill.png" alt="我的技能" width="32%">
+</p>
+<p align="center">
   <img src="website/public/dark.png" alt="暗色主题" width="32%">
   <img src="website/public/white.png" alt="亮色主题" width="32%">
-  <img src="website/public/login.png" alt="登录页" width="32%">
 </p>
 
 ---

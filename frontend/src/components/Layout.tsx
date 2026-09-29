@@ -65,7 +65,7 @@ export default function Layout() {
       <header className={`sticky top-0 z-50 border-b bg-white dark:bg-zinc-900 transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight text-lg" translate="no">
-            {siteConfig.logo && <img src="/api/config/logo" alt="" className="h-6 w-6 object-contain" />}
+            {siteConfig.logo && <img src="/api/config/logo" alt="" width="24" height="24" className="h-6 w-6 object-contain" />}
             <span>{siteConfig.logo_text}</span>
           </Link>
           <div className="flex items-center">
@@ -74,8 +74,8 @@ export default function Layout() {
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             >
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" aria-hidden="true" />
+              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" aria-hidden="true" />
             </button>
             <div className="relative mx-3" ref={langMenuRef}>
               <button

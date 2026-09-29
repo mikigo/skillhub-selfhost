@@ -26,7 +26,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored === 'zh' || stored === 'en') return stored
     } catch {}
-    return 'en'
+    return 'zh'
   })
 
   useEffect(() => {

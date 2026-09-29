@@ -201,9 +201,9 @@ export default function SkillDetail() {
               <div className="text-sm text-muted-foreground mb-2">{t('skillDetail.versions')}</div>
               <div className="space-y-1">
                 {skill.versions.map((v) => (
-                  <div
+                  <button
                     key={v.version}
-                    className={`flex items-center justify-between p-2 rounded text-sm cursor-pointer ${selectedVersion === v.version ? 'bg-primary/10 dark:bg-primary/20' : 'hover:bg-muted dark:bg-zinc-800/50'}`}
+                    className={`w-full flex items-center justify-between p-2 rounded text-sm cursor-pointer text-left ${selectedVersion === v.version ? 'bg-primary/10 dark:bg-primary/20' : 'hover:bg-muted dark:bg-zinc-800/50'}`}
                     onClick={() => handleVersionClick(v.version)}
                   >
                     <div>
@@ -213,15 +213,15 @@ export default function SkillDetail() {
                     </div>
                     <div className="flex gap-1">
                       <a href={`api/skills/${name}/download?version=${v.version}`} onClick={e => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7"><Download className="h-3 w-3" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Download"><Download className="h-3 w-3" /></Button>
                       </a>
                       {isAuthor && (
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={(e) => { e.stopPropagation(); handleDeleteVersion(v.version) }}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" aria-label="Delete" onClick={(e) => { e.stopPropagation(); handleDeleteVersion(v.version) }}>
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       )}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </CardContent>
