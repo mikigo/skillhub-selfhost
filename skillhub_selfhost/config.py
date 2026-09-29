@@ -15,25 +15,38 @@ class Config:
     secret_key: str = ""
     skills_dir: Optional[Path] = None
     log_level: str = "INFO"
+    logo_text: str = "SkillHub"
+    logo: str = ""
+    favicon: str = ""
+    default_lang: str = "en"
 
     def __post_init__(self):
+        self._load_config_json()
         if not self.db_url:
-            self.db_url = self._load_db_url()
+            self.db_url = f"sqlite://{self.base_dir / 'metadata.db'}"
         if not self.secret_key:
             self.secret_key = self._load_or_generate_secret()
         if self.skills_dir is None:
             self.skills_dir = self.base_dir / "skills"
 
-    def _load_db_url(self) -> str:
+    def _load_config_json(self):
         config_file = self.base_dir / "config.json"
-        if config_file.exists():
-            try:
-                data = json.loads(config_file.read_text())
-                if data.get("db_url"):
-                    return data["db_url"]
-            except Exception:
-                pass
-        return f"sqlite://{self.base_dir / 'metadata.db'}"
+        if not config_file.exists():
+            return
+        try:
+            data = json.loads(config_file.read_text())
+            if data.get("db_url"):
+                self.db_url = data["db_url"]
+            if data.get("logo_text"):
+                self.logo_text = data["logo_text"]
+            if data.get("logo"):
+                self.logo = data["logo"]
+            if data.get("favicon"):
+                self.favicon = data["favicon"]
+            if data.get("default_lang"):
+                self.default_lang = data["default_lang"]
+        except Exception:
+            pass
 
     def _load_or_generate_secret(self) -> str:
         secret_file = self.base_dir / ".secret"

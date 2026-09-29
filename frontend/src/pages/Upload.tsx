@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { apiFetch } from '../api/client'
+import { useT } from '../contexts/I18nContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -137,34 +138,8 @@ async function readFilesFromFileList(files: FileList): Promise<{ name: string; d
   return results
 }
 
-async function listFilesFromEntry(entry: FileSystemDirectoryEntry): Promise<number> {
-  let count = 0
-  async function countFiles(dir: FileSystemDirectoryEntry) {
-    const entries = await new Promise<FileSystemEntry[]>((resolve, reject) => {
-      const reader = dir.createReader()
-      const all: FileSystemEntry[] = []
-      function next() {
-        reader.readEntries((batch) => {
-          if (batch.length === 0) { resolve(all); return }
-          all.push(...batch)
-          next()
-        }, reject)
-      }
-      next()
-    })
-    for (const e of entries) {
-      if (e.isDirectory) {
-        await countFiles(e as FileSystemDirectoryEntry)
-      } else {
-        count++
-      }
-    }
-  }
-  await countFiles(entry)
-  return count
-}
-
 export default function Upload() {
+  const { t } = useT()
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const [folderName, setFolderName] = useState('')
@@ -215,7 +190,7 @@ export default function Upload() {
 
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault()
-    if (rawFiles.length === 0) { toast.error('请选择文件夹'); return }
+    if (rawFiles.length === 0) { toast.error(t('upload.selectFolder')); return }
     setUploading(true)
     try {
       const zipBlob = createZip(rawFiles)
@@ -232,7 +207,7 @@ export default function Upload() {
         const data = await resp.json()
         throw new Error(data.detail)
       }
-      toast.success('上传成功')
+      toast.success(t('upload.uploadSuccess'))
       navigate('/my')
     } catch (err: any) {
       toast.error(err.message)
@@ -242,21 +217,21 @@ export default function Upload() {
   }
 
   function addTag() {
-    const t = tagInput.trim()
-    if (t && !tags.includes(t)) { setTags([...tags, t]); setTagInput('') }
+    const tag = tagInput.trim()
+    if (tag && !tags.includes(tag)) { setTags([...tags, tag]); setTagInput('') }
   }
 
   return (
     <div>
-      <Link to="/my" className="flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
-        <ArrowLeft className="h-4 w-4 mr-1" />返回我的技能
+      <Link to="/my" className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
+        <ArrowLeft className="h-4 w-4 mr-1" />{t('upload.back')}
       </Link>
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-lg font-bold mb-4">上传新 Skill</h2>
+          <h2 className="text-lg font-bold mb-4">{t('upload.title')}</h2>
           <form onSubmit={handleUpload} className="space-y-4">
             <div
-              className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50"
+              className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted"
               onDragOver={e => e.preventDefault()}
               onDrop={handleDrop}
               onClick={() => inputRef.current?.click()}
@@ -268,32 +243,32 @@ export default function Upload() {
                 className="hidden"
                 onChange={handleSelect}
               />
-              <FolderOpen className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-              <p className="text-sm text-gray-500">
+              <FolderOpen className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">
                 {folderName
-                  ? `${folderName} (${fileCount} 个文件)`
-                  : '拖拽文件夹到此处或点击选择文件夹'}
+                  ? `${folderName} (${fileCount} ${t('mySkills.title')})`
+                  : t('upload.dropHint')}
               </p>
             </div>
 
-            <div><Label>skill 名称</Label><Input value={folderName} readOnly className="bg-gray-50" /><p className="text-xs text-gray-400">从文件夹名自动提取</p></div>
-            <div><Label>展示名称</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} required /></div>
-            <div><Label>描述</Label><Input value={description} onChange={e => setDescription(e.target.value)} required /></div>
+            <div><Label>{t('upload.skillName')}</Label><Input value={folderName} readOnly className="bg-muted" /><p className="text-xs text-muted-foreground">{t('upload.autoExtract')}</p></div>
+            <div><Label>{t('upload.displayName')}</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} required /></div>
+            <div><Label>{t('upload.description')}</Label><Input value={description} onChange={e => setDescription(e.target.value)} required /></div>
             <div>
-              <Label>标签</Label>
+              <Label>{t('upload.tags')}</Label>
               <div className="flex gap-1 flex-wrap mb-1">
-                {tags.map(t => <Badge key={t} variant="secondary" className="cursor-pointer" onClick={() => setTags(tags.filter(x => x !== t))}>{t} <X className="h-3 w-3 ml-1" /></Badge>)}
+                {tags.map(tg => <Badge key={tg} variant="secondary" className="cursor-pointer" onClick={() => setTags(tags.filter(x => x !== tg))}>{tg} <X className="h-3 w-3 ml-1" /></Badge>)}
               </div>
               <div className="flex gap-1">
-                <Input value={tagInput} onChange={e => setTagInput(e.target.value)} placeholder="添加标签" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }} />
-                <Button type="button" variant="outline" size="sm" onClick={addTag}>添加</Button>
+                <Input value={tagInput} onChange={e => setTagInput(e.target.value)} placeholder={t('upload.tagPlaceholder')} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }} />
+                <Button type="button" variant="outline" size="sm" onClick={addTag}>{t('upload.addTag')}</Button>
               </div>
             </div>
-            <div><Label>版本（留空自动追加小版本）</Label><Input value={version} onChange={e => setVersion(e.target.value)} placeholder="如 1.0.0" /></div>
-            <div><Label>更新说明（可选）</Label><Input value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)} /></div>
+            <div><Label>{t('upload.version')}</Label><Input value={version} onChange={e => setVersion(e.target.value)} placeholder={t('upload.versionPlaceholder')} /></div>
+            <div><Label>{t('upload.releaseNotes')}</Label><Input value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)} /></div>
 
             <Button type="submit" disabled={uploading || rawFiles.length === 0} className="w-full">
-              {uploading ? '上传中...' : '上传'}
+              {uploading ? t('upload.uploading') : t('upload.uploadBtn')}
             </Button>
           </form>
         </CardContent>

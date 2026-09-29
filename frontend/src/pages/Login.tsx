@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext'
+import { useT } from '../contexts/I18nContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 
 export default function Login() {
+  const { t } = useT()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -30,7 +32,7 @@ export default function Login() {
       })
       const user = await meRes.json()
       login(data.access_token, data.refresh_token, user)
-      toast.success('登录成功')
+      toast.success(t('auth.loginSuccess'))
       navigate('/')
     } catch (err: any) {
       toast.error(err.message)
@@ -42,23 +44,23 @@ export default function Login() {
   return (
     <div className="flex justify-center mt-20">
       <Card className="w-96">
-        <CardHeader><CardTitle className="text-center">登录 SkillHub</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-center">{t('auth.loginTitle')}</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="username">用户名</Label>
+              <Label htmlFor="username">{t('auth.username')}</Label>
               <Input id="username" value={username} onChange={e => setUsername(e.target.value)} required />
             </div>
             <div>
-              <Label htmlFor="password">密码</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? '登录中...' : '登录'}
+              {loading ? t('auth.loggingIn') : t('auth.loginBtn')}
             </Button>
           </form>
           <p className="text-sm text-center mt-4">
-            还没有账号？<Link to="/register" className="text-blue-600">立即注册</Link>
+            {t('auth.noAccount')}<Link to="/register" className="text-blue-600">{t('auth.registerNow')}</Link>
           </p>
         </CardContent>
       </Card>
