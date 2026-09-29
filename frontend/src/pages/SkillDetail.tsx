@@ -212,7 +212,7 @@ export default function SkillDetail() {
                       <div className="text-xs text-muted-foreground">{formatSize(v.file_size)}</div>
                     </div>
                     <div className="flex gap-1">
-                      <a href={`api/skills/${name}/download?version=${v.version}`} onClick={e => e.stopPropagation()}>
+                      <a href={`/api/skills/${name}/download?version=${v.version}`} onClick={e => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Download"><Download className="h-3 w-3" /></Button>
                       </a>
                       {isAuthor && (
