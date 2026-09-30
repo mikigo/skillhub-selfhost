@@ -1,4 +1,6 @@
 # skillhub_selfhost/skills/schemas.py
+from __future__ import annotations
+
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -15,6 +17,9 @@ class SkillListItem(BaseModel):
     author: AuthorInfo
     original_author: str | None = None
     source_url: str | None = None
+    source_type: str = "local"
+    source_branch: str | None = None
+    source_path: str | None = None
     latest_version: str
     tags: list[str]
     download_count: int
@@ -40,6 +45,9 @@ class SkillDetailResponse(BaseModel):
     author: AuthorInfo
     original_author: str | None = None
     source_url: str | None = None
+    source_type: str = "local"
+    source_branch: str | None = None
+    source_path: str | None = None
     tags: list[str]
     download_count: int
     created_at: datetime
@@ -56,3 +64,9 @@ class PaginatedResponse(BaseModel):
 
 class TransferRequest(BaseModel):
     target_user: str
+
+
+class RemoteUploadRequest(BaseModel):
+    gitlab_url: str
+    branch: str
+    skill_path: str = ""

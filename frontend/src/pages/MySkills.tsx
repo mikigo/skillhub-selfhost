@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { apiFetch } from '../api/client'
+import { skillApiPath, skillPath } from '@/lib/skillPath'
 import { useT } from '../contexts/I18nContext'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
@@ -13,7 +14,9 @@ interface MySkill {
   name: string
   display_name: string
   description: string
+  author: { username: string }
   latest_version: string
+  source_type?: string
   tags: string[]
   download_count: number
 }
@@ -33,9 +36,9 @@ export default function MySkills() {
     setLoading(false)
   }
 
-  async function handleDelete(name: string) {
+  async function handleDelete(username: string, name: string) {
     if (!confirm(t('mySkills.deleteConfirm', { name }))) return
-    const resp = await apiFetch(`/api/skills/${name}`, { method: 'DELETE' })
+    const resp = await apiFetch(skillApiPath(username, name), { method: 'DELETE' })
     if (resp.ok) {
       toast.success(t('mySkills.deleted'))
       loadSkills()
@@ -45,10 +48,10 @@ export default function MySkills() {
     }
   }
 
-  async function handleTransfer(name: string) {
+  async function handleTransfer(username: string, name: string) {
     const target = prompt(t('mySkills.transfer'))
     if (!target) return
-    const resp = await apiFetch(`/api/skills/${name}/transfer`, {
+    const resp = await apiFetch(skillApiPath(username, name, '/transfer'), {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ target_user: target }),
@@ -82,15 +85,15 @@ export default function MySkills() {
       ) : (
         <div className="space-y-3">
           {skills.map(skill => (
-            <Card key={skill.name}>
+            <Card key={`${skill.author.username}/${skill.name}`}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
-                  <Link to={`/skills/${skill.name}`} className="font-medium hover:text-blue-600">{skill.display_name}</Link>
+                  <Link to={skillPath(skill.author.username, skill.name)} className="font-medium hover:text-blue-600">{skill.display_name}</Link>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDelete(skill.name)} title={t('mySkills.deleteConfirm', { name: skill.name })}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleDelete(skill.author.username, skill.name)} title={t('mySkills.deleteConfirm', { name: skill.name })}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleTransfer(skill.name)} title={t('mySkills.transfer')}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleTransfer(skill.author.username, skill.name)} title={t('mySkills.transfer')}>
                       <ArrowRightLeft className="h-4 w-4" />
                     </Button>
                   </div>
@@ -103,9 +106,11 @@ export default function MySkills() {
                 <div className="mt-2 flex gap-1 flex-wrap">
                   {skill.tags.map(t => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
                 </div>
-                <Link to="/upload" className="mt-2 inline-block">
-                  <Button variant="outline" size="sm"><Plus className="h-3 w-3 mr-1" />{t('mySkills.addVersion')}</Button>
-                </Link>
+                {skill.source_type !== 'gitlab' && (
+                  <Link to="/upload" className="mt-2 inline-block">
+                    <Button variant="outline" size="sm"><Plus className="h-3 w-3 mr-1" />{t('mySkills.addVersion')}</Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           ))}

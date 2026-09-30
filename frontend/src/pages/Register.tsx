@@ -49,7 +49,8 @@ export default function Register() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="username">{t('auth.username')}</Label>
-              <Input id="username" name="username" autoComplete="username" spellCheck={false} value={username} onChange={e => setUsername(e.target.value)} required />
+              <Input id="username" name="username" autoComplete="username" spellCheck={false} pattern="[A-Za-z0-9][A-Za-z0-9._\-]*" title={t('auth.usernameHint')} value={username} onChange={e => setUsername(e.target.value)} required />
+              <p className="text-xs text-muted-foreground mt-1">{t('auth.usernameHint')}</p>
             </div>
             <div>
               <Label htmlFor="password">{t('auth.password')}</Label>

@@ -6,9 +6,10 @@ import { useT } from '../contexts/I18nContext'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Badge } from '../components/ui/badge'
 import { Card, CardContent } from '../components/ui/card'
-import { ArrowLeft, FolderOpen, X } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
+import GitlabUploadForm from '../components/GitlabUploadForm'
+import { ArrowLeft, FolderOpen } from 'lucide-react'
 
 function parseFrontmatterField(mdContent: string, field: string): string {
   const trimmed = mdContent.trimStart()
@@ -145,10 +146,7 @@ export default function Upload() {
   const [folderName, setFolderName] = useState('')
   const [fileCount, setFileCount] = useState(0)
   const [rawFiles, setRawFiles] = useState<{ name: string; data: Uint8Array }[]>([])
-  const [displayName, setDisplayName] = useState('')
   const [description, setDescription] = useState('')
-  const [tags, setTags] = useState<string[]>([])
-  const [tagInput, setTagInput] = useState('')
   const [version, setVersion] = useState('')
   const [releaseNotes, setReleaseNotes] = useState('')
   const [originalAuthor, setOriginalAuthor] = useState('')
@@ -173,7 +171,6 @@ export default function Upload() {
       setRawFiles(all)
       setFolderName(name)
       setFileCount(all.length)
-      setDisplayName(name)
       setDescription(extractDescFromFiles(all))
     }
   }
@@ -186,7 +183,6 @@ export default function Upload() {
     setRawFiles(all)
     setFolderName(name)
     setFileCount(all.length)
-    setDisplayName(name)
     setDescription(extractDescFromFiles(all))
   }
 
@@ -198,9 +194,7 @@ export default function Upload() {
       const zipBlob = createZip(rawFiles)
       const formData = new FormData()
       formData.append('file', zipBlob, `${folderName}.zip`)
-      formData.append('display_name', displayName)
       formData.append('description', description)
-      formData.append('tags', JSON.stringify(tags))
       if (version) formData.append('version', version)
       if (releaseNotes) formData.append('release_notes', releaseNotes)
       if (originalAuthor) formData.append('original_author', originalAuthor)
@@ -220,11 +214,6 @@ export default function Upload() {
     }
   }
 
-  function addTag() {
-    const tag = tagInput.trim()
-    if (tag && !tags.includes(tag)) { setTags([...tags, tag]); setTagInput('') }
-  }
-
   return (
     <div>
       <Link to="/my" className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
@@ -233,6 +222,13 @@ export default function Upload() {
       <Card>
         <CardContent className="p-6">
           <h2 className="text-lg font-bold mb-4">{t('upload.title')}</h2>
+          <Tabs defaultValue="local">
+            <TabsList>
+              <TabsTrigger value="local">{t('upload.tabLocal')}</TabsTrigger>
+              <TabsTrigger value="gitlab">{t('upload.tabGitlab')}</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="local" className="mt-4">
           <form onSubmit={handleUpload} className="space-y-4">
             <div
               className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted"
@@ -256,18 +252,7 @@ export default function Upload() {
             </div>
 
             <div><Label>{t('upload.skillName')}</Label><Input value={folderName} readOnly className="bg-muted" /><p className="text-xs text-muted-foreground">{t('upload.autoExtract')}</p></div>
-            <div><Label>{t('upload.displayName')}</Label><Input value={displayName} onChange={e => setDisplayName(e.target.value)} required /></div>
             <div><Label>{t('upload.description')}</Label><Input value={description} onChange={e => setDescription(e.target.value)} required /></div>
-            <div>
-              <Label>{t('upload.tags')}</Label>
-              <div className="flex gap-1 flex-wrap mb-1">
-                {tags.map(tg => <Badge key={tg} variant="secondary" className="cursor-pointer" onClick={() => setTags(tags.filter(x => x !== tg))}>{tg} <X className="h-3 w-3 ml-1" /></Badge>)}
-              </div>
-              <div className="flex gap-1">
-                <Input value={tagInput} onChange={e => setTagInput(e.target.value)} placeholder={t('upload.tagPlaceholder')} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag() } }} />
-                <Button type="button" variant="outline" size="sm" onClick={addTag}>{t('upload.addTag')}</Button>
-              </div>
-            </div>
             <div><Label>{t('upload.version')}</Label><Input value={version} onChange={e => setVersion(e.target.value)} placeholder={t('upload.versionPlaceholder')} /></div>
             <div><Label>{t('upload.releaseNotes')}</Label><Input value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)} /></div>
             <div><Label>{t('upload.originalAuthor')}</Label><Input value={originalAuthor} onChange={e => setOriginalAuthor(e.target.value)} /></div>
@@ -277,6 +262,12 @@ export default function Upload() {
               {uploading ? t('upload.uploading') : t('upload.uploadBtn')}
             </Button>
           </form>
+            </TabsContent>
+
+            <TabsContent value="gitlab" className="mt-4">
+              <GitlabUploadForm />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

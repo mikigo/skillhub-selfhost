@@ -31,7 +31,7 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/skills/:name" element={<SkillDetail />} />
+        <Route path="/skills/:username/:name" element={<SkillDetail />} />
         <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
         <Route path="/my" element={<ProtectedRoute><MySkills /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute admin><Admin /></ProtectedRoute>} />

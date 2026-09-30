@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { apiFetch } from '../api/client'
+import { skillPath } from '@/lib/skillPath'
 import { useT } from '../contexts/I18nContext'
 import { Badge } from '../components/ui/badge'
 import { Card, CardContent } from '../components/ui/card'
@@ -51,7 +52,7 @@ export default function Author() {
             <Card key={skill.name}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">
-                  <Link to={`/skills/${skill.name}`} className="font-medium hover:text-blue-600">{skill.display_name}</Link>
+                  <Link to={skillPath(username!, skill.name)} className="font-medium hover:text-blue-600">{skill.display_name}</Link>
                   <span className="text-xs text-muted-foreground">{skill.download_count.toLocaleString()}{t('author.downloads')}</span>
                 </div>
                 <div className="text-sm text-muted-foreground mb-2">{skill.description}</div>

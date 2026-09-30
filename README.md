@@ -15,7 +15,8 @@ AI Agent 通过可复用的模块（"技能"）获取领域知识和工具链集
 | 分类 | 说明 |
 |----------|---------|
 | 浏览与搜索 | 全文搜索、标签筛选、多维度排序（总下载数 / 24 小时热门 / 最新上传） |
-| 上传 | 拖拽文件夹自动打包 ZIP，自动提取 SKILL.md frontmatter，支持版本号与更新说明 |
+| 上传 | 拖拽文件夹自动打包 ZIP，展示名称与标签自动取自 SKILL.md frontmatter，支持版本号与更新说明 |
+| 从 GitLab 导入 | 只保存仓库指针（地址 + 分支 + 路径），描述自动取自 SKILL.md，内容实时拉取 |
 | 版本管理 | 多版本并存、自由切换、作者可删除旧版本 |
 | 用户系统 | 注册需管理员审批、BCrypt 密码加密、JWT 令牌 + 刷新令牌 |
 | 权限控制 | 管理员与普通用户角色分离、技能所有权保护、技能转让 |
@@ -36,6 +37,62 @@ AI Agent 通过可复用的模块（"技能"）获取领域知识和工具链集
   <img src="website/public/dark.png" alt="暗色主题" width="32%">
   <img src="website/public/white.png" alt="亮色主题" width="32%">
 </p>
+
+---
+
+## 技能的名字与地址
+
+**技能名只在作者内唯一**：两个用户可以各有一个叫 `foo` 的 skill，但同一个人不能有两个 `foo`（再次上传同名会变成追加版本）。所以定位一个 skill 必须同时给出作者名，页面与 API 的地址都带上作者：
+
+| | 地址 |
+|---|---|
+| 详情页 | `/skills/<用户名>/<技能名>` |
+| 详情 / README / 下载 / 删除 / 转让 API | `/api/skills/<用户名>/<技能名>/...` |
+
+安装命令因此形如：
+
+```bash
+curl -sSL -o /tmp/skill.zip https://your-skillhub/api/skills/alice/foo/download && unzip -o /tmp/skill.zip -d ~/.agents/skills/
+```
+
+首页列表在展示名后面用灰字标出作者；如果这个 skill 是通过「原作者」字段记着转手来源的，会显示成 `alice[原作者]`。
+
+用户名的字符集是有限制的：**字母、数字以及 `-` `_` `.`，且必须以字母或数字开头**。这条规则只在注册（含管理员建号）时校验，见下方已知限制。
+
+### 已知限制
+
+- 老链接 `/skills/<技能名>` **直接失效**，没有重定向 —— 请用带作者名的新地址
+- 用户名校验只对新账号生效：**存量账号**如果用户名含上面字库之外的字符（尤其是 `/`），它的详情页链接拼不出来，需要改名或重新建号
+- 首页上同名的 skill 会并排出现两条，只能靠后面那串 `用户名[原作者]` 区分
+
+---
+
+## 从 GitLab 导入技能
+
+上传页有「本地 ZIP」和「GitLab」两个 tab。GitLab 方式只需填 3 项：
+
+| 字段 | 说明 |
+|----------|---------|
+| GitLab 地址 | 项目主页地址，如 `https://gitlab.com/group/proj`。`.git` 后缀、尾部 `/`，以及浏览器里复制的 `/-/tree/main/xxx` 形式的地址都能识别 |
+| 分支 | 如 `main` |
+| 技能路径 | 仓库内的相对路径，如 `skills/foo`；留空表示技能就在仓库根目录 |
+
+提交后后端会读取该路径下的 `SKILL.md`，用 frontmatter 自动填充各字段（表单里没有可编辑的输入框）：
+
+- **技能名** = 路径最后一段（路径留空时取项目名），与作者共同构成唯一标识
+- **显示名** = frontmatter 的 `name`，缺失时回退为技能名
+- **描述** = frontmatter 的 `description`
+- **标签** = frontmatter 的 `tags`
+
+这类技能**没有版本概念**：详情页每次打开都实时读取仓库中最新的 `SKILL.md`，不做任何缓存；下载同样由后端实时从 GitLab 拉取归档、重新打包成 `<技能名>/...` 后返回（所以安装命令里的 `curl` 只会访问你的 SkillHub，不需要能连到 GitLab）。因此 GitLab 上的改动无需回到 SkillHub 重新上传，刷新详情页即可看到。
+
+### 已知限制
+
+- 仅支持公开仓库（或内网免认证），**不支持私有仓库，也不支持配置访问 token**
+- 不支持自签名 TLS 证书的 GitLab
+- 假定 GitLab 安装在域名根路径（即 `https://host/api/v4`）；装在子路径（如 `https://host/gitlab/...`）时会表现为 404
+- 同一作者名下，技能名取自路径最后一段，因此 `agents/foo` 与 `tools/foo` 会撞名（不同作者可以各有一个 `foo`）
+- 已登记的技能会被重新指向：同一作者用相同技能名再次提交，会覆盖原有的分支/路径配置
 
 ---
 
@@ -207,6 +264,7 @@ skillhub-selfhost server-start --port 8000
 | API 框架 | FastAPI (Python) |
 | ORM | Tortoise ORM + SQLite / PostgreSQL |
 | 认证 | BCrypt + PyJWT |
+| 出站请求 | Python 标准库 urllib（拉取 GitLab 内容，无额外依赖） |
 | CLI | Typer |
 | 前端框架 | React 18 + TypeScript |
 | 构建工具 | Vite |

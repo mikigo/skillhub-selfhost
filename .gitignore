@@ -18,8 +18,8 @@ develop-eggs/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -225,3 +225,4 @@ __marimo__/
 metadata.db*
 .secret
 logs/
+需求说明书.md

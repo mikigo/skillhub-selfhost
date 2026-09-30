@@ -49,6 +49,10 @@ def create_app() -> FastAPI:
 
         @app.get("/{full_path:path}")
         async def serve_spa(full_path: str):
+            # 没匹配上的 /api/* 不能落到 SPA 兜底上：否则会返回 200 + HTML，
+            # 调用方要等到解析 JSON 才发现不对（旧地址 /api/skills/{name} 就是这种）
+            if full_path == "api" or full_path.startswith("api/"):
+                return JSONResponse({"detail": "Not Found"}, status_code=404)
             index = dist_path / "index.html"
             if index.exists():
                 return FileResponse(index)

@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
 import { apiFetch } from '../api/client'
+import { skillApiPath } from '@/lib/skillPath'
 import { useAuth } from '../contexts/AuthContext'
 import { useT } from '../contexts/I18nContext'
 import { Button } from '../components/ui/button'
@@ -26,6 +27,9 @@ interface SkillDetail {
   author: { username: string; status: string }
   original_author: string | null
   source_url: string | null
+  source_type: string
+  source_branch: string | null
+  source_path: string | null
   tags: string[]
   download_count: number
   versions: Version[]
@@ -43,33 +47,50 @@ function splitFrontmatter(md: string): { frontmatter: string; body: string } {
 }
 
 export default function SkillDetail() {
-  const { name } = useParams<{ name: string }>()
+  const { username = '', name = '' } = useParams<{ username: string; name: string }>()
   const { user } = useAuth()
   const { t } = useT()
   const [skill, setSkill] = useState<SkillDetail | null>(null)
   const [readme, setReadme] = useState('')
   const [selectedVersion, setSelectedVersion] = useState('')
   const [loading, setLoading] = useState(true)
+  const [readmeLoading, setReadmeLoading] = useState(false)
+  const [readmeError, setReadmeError] = useState<string | null>(null)
   const isAuthor = user?.username === skill?.author?.username
+  const isRemote = skill?.source_type === 'gitlab'
 
-  useEffect(() => { loadSkill() }, [name])
+  useEffect(() => { loadSkill() }, [username, name])
+
+  async function loadReadme(version: string) {
+    setReadmeLoading(true)
+    setReadmeError(null)
+    try {
+      const query = version ? `?version=${version}` : ''
+      const rmResp = await apiFetch(skillApiPath(username, name, `/readme${query}`))
+      if (rmResp.ok) {
+        setReadme(await rmResp.text())
+      } else {
+        const data = await rmResp.json().catch(() => ({} as any))
+        setReadme('')
+        setReadmeError(typeof data.detail === 'string' ? data.detail : t('skillDetail.readmeError'))
+      }
+    } finally {
+      setReadmeLoading(false)
+    }
+  }
 
   async function loadSkill(version?: string) {
     setLoading(true)
     const query = version ? `?version=${version}` : ''
-    const resp = await apiFetch(`/api/skills/${name}${query}`)
+    const resp = await apiFetch(skillApiPath(username, name, query))
     if (!resp.ok) { setLoading(false); return }
     const data = await resp.json()
     setSkill(data)
-    const v = version || data.versions[0]?.version
+    // 远程 skill 没有版本：v 为空时不带 version 参数，但依然要实时拉取 SKILL.md
+    const v = version || data.versions[0]?.version || ''
     setSelectedVersion(v)
-
-    if (v) {
-      const rmResp = await apiFetch(`/api/skills/${name}/readme?version=${v}`)
-      if (rmResp.ok) setReadme(await rmResp.text())
-    }
-
     setLoading(false)
+    await loadReadme(v)
   }
 
   function handleVersionClick(version: string) {
@@ -79,7 +100,7 @@ export default function SkillDetail() {
 
   async function handleDeleteVersion(version: string) {
     if (!confirm(t('skillDetail.deleteConfirm', { version }))) return
-    const resp = await apiFetch(`/api/skills/${name}/versions/${version}`, { method: 'DELETE' })
+    const resp = await apiFetch(skillApiPath(username, name, `/versions/${version}`), { method: 'DELETE' })
     if (resp.ok) { toast.success(t('skillDetail.deleted')); loadSkill() }
     else { const data = await resp.json(); toast.error(data.detail) }
   }
@@ -92,10 +113,11 @@ export default function SkillDetail() {
 
   const { frontmatter, body } = useMemo(() => splitFrontmatter(readme), [readme])
 
-  const downloadUrl = `api/skills/${name}/download${selectedVersion ? `?version=${selectedVersion}` : ''}`
-  const fullUrl = `${window.location.origin}/${downloadUrl}`
-  const cmdUnix = `curl -sSL -o /tmp/skill.zip ${fullUrl} && unzip -o /tmp/skill.zip -d ~/.agent/skills/`
-  const cmdWin = `Invoke-WebRequest -Uri "${fullUrl}" -OutFile "$env:TEMP\\skill.zip"; Expand-Archive -Path "$env:TEMP\\skill.zip" -DestinationPath "$env:USERPROFILE\\.agent\\skills" -Force`
+  // 安装命令由 fullUrl 派生，带上 username 后两条命令（unix / windows）就都对了
+  const downloadUrl = `${skillApiPath(username, name, '/download')}${selectedVersion ? `?version=${selectedVersion}` : ''}`
+  const fullUrl = `${window.location.origin}${downloadUrl}`
+  const cmdUnix = `curl -sSL -o /tmp/skill.zip ${fullUrl} && unzip -o /tmp/skill.zip -d ~/.agents/skills/`
+  const cmdWin = `Invoke-WebRequest -Uri "${fullUrl}" -OutFile "$env:TEMP\\skill.zip"; Expand-Archive -Path "$env:TEMP\\skill.zip" -DestinationPath "$env:USERPROFILE\\.agents\\skills" -Force`
 
   const copyToClipboard = (text: string) => { navigator.clipboard.writeText(text); toast.success(t('skillDetail.copied')) }
 
@@ -116,6 +138,21 @@ export default function SkillDetail() {
         <div className="col-span-9">
           <Card>
             <CardContent className="p-6">
+              {readmeLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-1/3" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </div>
+              ) : readmeError ? (
+                <div className="flex flex-col items-start gap-3 rounded-md border border-destructive/40 bg-destructive/5 p-4">
+                  <span className="text-sm text-destructive">{readmeError}</span>
+                  <Button variant="outline" size="sm" onClick={() => loadReadme(selectedVersion)}>
+                    {t('skillDetail.retry')}
+                  </Button>
+                </div>
+              ) : (
+                <>
               {frontmatter && (
                 <pre className="text-xs text-muted-foreground font-mono bg-muted dark:bg-zinc-800/50 rounded p-3 mb-4 overflow-x-auto border whitespace-pre-wrap break-words">
                   {frontmatter}
@@ -153,6 +190,8 @@ export default function SkillDetail() {
                   {body || `# ${t('skillDetail.noReadme')}`}
                 </ReactMarkdown>
               </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -183,11 +222,20 @@ export default function SkillDetail() {
                   </div>
                 </div>
               </div>
+              {isRemote && (
+                <a href={skillApiPath(username, name, '/download')} className="block">
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Download className="h-4 w-4 mr-1" />{t('skillDetail.download')}
+                  </Button>
+                </a>
+              )}
               <div>
                 <div className="text-sm text-muted-foreground">{t('skillDetail.basicInfo')}</div>
                 <div className="text-sm mt-1">{t('skillDetail.author')}: <Link to={`/author/${skill.author.username}`} className="text-blue-600 hover:underline">{skill.author.username}</Link></div>
                 {skill.original_author && <div className="text-sm text-muted-foreground">原作者: {skill.original_author}</div>}
                 {skill.source_url && <div className="text-sm text-muted-foreground truncate">来源: <a href={skill.source_url} className="text-blue-600 hover:underline" target="_blank" rel="noopener">{skill.source_url}</a></div>}
+                {isRemote && skill.source_branch && <div className="text-sm text-muted-foreground">{t('skillDetail.branch')}: {skill.source_branch}</div>}
+                {isRemote && skill.source_path && <div className="text-sm text-muted-foreground break-all">{t('skillDetail.path')}: {skill.source_path}</div>}
                 <div className="text-sm">{t('skillDetail.downloads')}: {skill.download_count.toLocaleString()}</div>
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {skill.tags.map(t => <Badge key={t} variant="secondary" className="text-[10px]">{t}</Badge>)}
@@ -196,6 +244,7 @@ export default function SkillDetail() {
             </CardContent>
           </Card>
 
+          {!isRemote && (
           <Card>
             <CardContent className="p-4">
               <div className="text-sm text-muted-foreground mb-2">{t('skillDetail.versions')}</div>
@@ -212,7 +261,7 @@ export default function SkillDetail() {
                       <div className="text-xs text-muted-foreground">{formatSize(v.file_size)}</div>
                     </div>
                     <div className="flex gap-1">
-                      <a href={`/api/skills/${name}/download?version=${v.version}`} onClick={e => e.stopPropagation()}>
+                      <a href={skillApiPath(username, name, `/download?version=${v.version}`)} onClick={e => e.stopPropagation()}>
                         <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Download"><Download className="h-3 w-3" /></Button>
                       </a>
                       {isAuthor && (
@@ -226,6 +275,7 @@ export default function SkillDetail() {
               </div>
             </CardContent>
           </Card>
+          )}
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkillHub — 自托管 AI 技能市场</title>
+  <title>SkillHub-SelfHost — 自托管 AI 技能市场</title>
   <meta name="description" content="自托管的 AI 技能市场。搜索、上传、分享 — 一条命令完成安装。">
   <meta name="theme-color" content="#09090b">
   <link rel="icon" href="public/favicon.ico" type="image/x-icon">
@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { color-scheme: dark; scroll-behavior: smooth; }
+    html { color-scheme: dark; scroll-behavior: smooth; scroll-padding-top: 72px; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       background: #09090b; color: #fafafa; line-height: 1.6;
@@ -36,7 +36,7 @@
     nav .links .btn:hover { opacity: 0.9; }
     nav .lang-btn {
       background: none; border: 1px solid rgba(255,255,255,0.12); color: #a1a1aa;
-      padding: 4px 10px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
       font-family: 'Inter', sans-serif; transition: all 0.2s;
     }
     nav .lang-btn:hover { border-color: rgba(255,255,255,0.3); color: #fafafa; }
@@ -49,6 +49,19 @@
       background: radial-gradient(circle at center, rgba(99,102,241,0.15) 0%, transparent 70%);
       pointer-events: none;
     }
+    .hero .brand {
+      display: inline-flex; align-items: center; gap: 14px;
+      margin-bottom: 24px; position: relative; z-index: 1;
+    }
+    .hero .brand svg {
+      display: block; flex: none; width: clamp(36px,4.6vw,46px); height: clamp(36px,4.6vw,46px);
+      border-radius: 25%; box-shadow: 0 10px 30px -10px rgba(129,140,248,0.6);
+    }
+    .hero .brand-text {
+      font-family: 'JetBrains Mono', monospace; font-weight: 600;
+      font-size: clamp(20px,3.6vw,30px); letter-spacing: -0.01em; line-height: 1; color: #fafafa;
+    }
+    .hero .brand-text span { color: #71717a; }
     .hero .badge {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 4px 12px; border-radius: 9999px;
@@ -57,7 +70,7 @@
     }
     .hero .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #818cf8; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-    .hero h1 { font-size: clamp(40px,8vw,72px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px; position: relative; z-index: 1; }
+    .hero h1 { font-size: clamp(32px,8vw,72px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px; position: relative; z-index: 1; }
     .hero h1 .gradient {
       background: linear-gradient(135deg,#818cf8 0%,#c084fc 50%,#f472b6 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
@@ -90,16 +103,16 @@
     .feature-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
     .feature-card p { font-size: 14px; color: #a1a1aa; line-height: 1.7; }
     .screenshots { text-align: center; }
-    .screenshots .tabs { display: inline-flex; gap: 2px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 4px; }
+    .screenshots .tabs { display: inline-flex; flex-wrap: wrap; justify-content: center; max-width: 100%; gap: 2px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 4px; }
     .screenshots .tabs button { background: none; border: none; color: #a1a1aa; font-family: 'Inter',sans-serif; font-size: 14px; font-weight: 500; padding: 8px 20px; border-radius: 7px; cursor: pointer; transition: all 0.2s; }
     .screenshots .tabs button.active { background: rgba(255,255,255,0.1); color: #fafafa; }
-    .screenshot-img { margin-top: 32px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5); max-width: 100%; height: auto; }
-    .install-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); gap: 16px; }
-    .install-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; }
+    .screenshot-img { display: block; margin: 32px auto 0; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 60px -20px rgba(0,0,0,0.5); max-width: 100%; height: auto; }
+    .install-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; }
+    .install-card { display: flex; flex-direction: column; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 24px; }
     .install-card .os { font-size: 13px; font-weight: 600; color: #818cf8; margin-bottom: 12px; }
-    .install-card code { display: block; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 16px; font-family: 'JetBrains Mono',monospace; font-size: 13px; color: #d4d4d8; line-height: 1.8; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+    .install-card code { display: block; flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 16px; font-family: 'JetBrains Mono',monospace; font-size: 13px; color: #d4d4d8; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
     .stats { text-align: center; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 8px; max-width: 800px; margin: 0 auto; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 16px; max-width: 800px; margin: 0 auto; }
     .stat { padding: 32px; }
     .stat .num { font-size: 42px; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg,#818cf8,#c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .stat .label { font-size: 14px; color: #a1a1aa; margin-top: 4px; }
@@ -113,7 +126,19 @@
     footer p { font-size: 14px; color: #52525b; }
     footer a { color: #a1a1aa; text-decoration: none; transition: color 0.2s; }
     footer a:hover { color: #fafafa; }
-    @media (max-width:768px) { .hero{padding:120px 16px 60px} section{padding:60px 16px} nav .links .btn{display:none} }
+    @media (max-width:768px) {
+      .hero { padding: 120px 16px 60px }
+      section { padding: 60px 16px }
+      nav .inner { padding: 0 16px }
+      nav .logo { font-size: 16px }
+      nav .links { gap: 12px }
+      nav .links a { font-size: 13px }
+      nav .links .btn { display: none }
+      nav .lang-btn { padding: 4px 10px; font-size: 12px }
+      .install-grid { grid-template-columns: 1fr }
+    }
+    /* logo 换成 SkillHub-SelfHost 后变长，窄屏放不下「功能 / 截图 / 安装」，这几个锚点滚动即可到达 */
+    @media (max-width:600px) { nav .links a[href^="#"] { display: none } }
   </style>
 </head>
 <body>
@@ -121,7 +146,7 @@
     <div class="inner">
       <a href="#" class="logo">
         <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#818cf8"/><path d="M8 22V10l6 6-6 6zM16 22V10l6 6-6 6z" fill="#fafafa"/></svg>
-        SkillHub
+        SkillHub-SelfHost
       </a>
       <div class="links">
         <a href="#features" data-i18n="nav.features">功能</a>
@@ -134,6 +159,10 @@
   </nav>
 
   <div class="hero">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#818cf8"/><path d="M8 22V10l6 6-6 6zM16 22V10l6 6-6 6z" fill="#fafafa"/></svg>
+      <span class="brand-text">SkillHub<span>-SelfHost</span></span>
+    </div>
     <div class="badge"><span class="dot"></span><span data-i18n="hero.badge">开源 · 自托管</span></div>
     <h1><span data-i18n="hero.line1">给你的 AI Agent</span><br><span data-i18n="hero.line2">一个专属的</span> <span class="gradient" data-i18n="hero.gradient">技能商店</span></h1>
     <p data-i18n="hero.desc">自托管的 AI 技能市场。上传、搜索、版本管理、分享 — 一条命令即可完成安装。</p>
@@ -158,32 +187,42 @@
         <div class="feature-card">
           <div class="icon" style="background:rgba(129,140,248,0.15);color:#a5b4fc;">&#x1F50D;</div>
           <h3 data-i18n="features.f1t">浏览与搜索</h3>
-          <p data-i18n="features.f1d">全文搜索、标签筛选、多种排序方式。快速找到任何任务所需技能。</p>
+          <p data-i18n="features.f1d">全文搜索、标签筛选，按下载量或上传时间排序。快速找到任何任务所需技能。</p>
         </div>
         <div class="feature-card">
           <div class="icon" style="background:rgba(244,114,182,0.15);color:#f9a8d4;">&#x1F4E6;</div>
           <h3 data-i18n="features.f2t">拖拽上传</h3>
-          <p data-i18n="features.f2d">拖入文件夹自动打包 ZIP，自动提取 SKILL.md 元数据。支持版本号与更新说明。</p>
+          <p data-i18n="features.f2d">拖入文件夹自动打包 ZIP，展示名和标签直接从 SKILL.md 的 frontmatter 读取。支持版本号与更新说明。</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon" style="background:rgba(252,109,38,0.15);color:#fdba74;">&#x1F98A;</div>
+          <h3 data-i18n="features.f3t">从 GitLab 导入</h3>
+          <p data-i18n="features.f3d">填仓库地址、分支和路径即可，内容实时从仓库读取。GitLab 上改了，刷新详情页就是最新的。</p>
         </div>
         <div class="feature-card">
           <div class="icon" style="background:rgba(192,132,252,0.15);color:#d8b4fe;">&#x1F504;</div>
-          <h3 data-i18n="features.f3t">版本管理</h3>
-          <p data-i18n="features.f3d">多版本并存，自由切换。作者可删除旧版本。</p>
+          <h3 data-i18n="features.f4t">版本管理</h3>
+          <p data-i18n="features.f4d">多版本并存，自由切换。作者可删除旧版本。</p>
         </div>
         <div class="feature-card">
           <div class="icon" style="background:rgba(52,211,153,0.15);color:#6ee7b7;">&#x1F510;</div>
-          <h3 data-i18n="features.f4t">用户与认证</h3>
-          <p data-i18n="features.f4d">注册需管理员审批。BCrypt 加密 + JWT 令牌刷新。支持技能转让。</p>
+          <h3 data-i18n="features.f5t">用户与认证</h3>
+          <p data-i18n="features.f5d">注册需管理员审批。BCrypt 加密密码，JWT 访问令牌 + 刷新令牌。</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon" style="background:rgba(56,189,248,0.15);color:#7dd3fc;">&#x1F511;</div>
+          <h3 data-i18n="features.f6t">权限控制</h3>
+          <p data-i18n="features.f6d">管理员与普通用户角色分离，技能归属到个人，也可以转让给同事。</p>
         </div>
         <div class="feature-card">
           <div class="icon" style="background:rgba(251,191,36,0.15);color:#fcd34d;">&#x1F3A8;</div>
-          <h3 data-i18n="features.f5t">主题与国际化</h3>
-          <p data-i18n="features.f5d">亮色/暗色主题，中英文界面。支持自定义 Logo 与 Favicon。</p>
+          <h3 data-i18n="features.f7t">主题与国际化</h3>
+          <p data-i18n="features.f7d">亮色/暗色主题，跟随系统偏好，中英文界面。Logo 与站点标题都能换成自己的。</p>
         </div>
         <div class="feature-card">
           <div class="icon" style="background:rgba(239,68,68,0.15);color:#fca5a5;">&#x1F6E0;</div>
-          <h3 data-i18n="features.f6t">管理面板</h3>
-          <p data-i18n="features.f6d">审批用户、禁用/启用账号、创建用户。完全掌控访问权限。</p>
+          <h3 data-i18n="features.f8t">管理面板</h3>
+          <p data-i18n="features.f8d">审批用户、禁用/启用账号、创建用户。完全掌控访问权限。</p>
         </div>
       </div>
     </div>
@@ -210,7 +249,7 @@
       <div class="section-label" data-i18n="stats.label">关键数据</div>
       <h2 class="section-title" style="margin-bottom:40px" data-i18n="stats.title">为规模化而生</h2>
       <div class="stats-grid">
-        <div class="stat"><div class="num">1</div><div class="label" data-i18n="stats.s1">一个可执行文件</div></div>
+        <div class="stat"><div class="num">2</div><div class="label" data-i18n="stats.s1">种技能接入方式（ZIP / GitLab）</div></div>
         <div class="stat"><div class="num">2</div><div class="label" data-i18n="stats.s2">种语言（中 / 英）</div></div>
         <div class="stat"><div class="num">0</div><div class="label" data-i18n="stats.s3">外部依赖</div></div>
         <div class="stat"><div class="num">&infin;</div><div class="label" data-i18n="stats.s4">技能托管容量</div></div>
@@ -221,7 +260,7 @@
   <section id="install">
     <div class="container">
       <div class="section-label" data-i18n="install.label">快速开始</div>
-      <h2 class="section-title" data-i18n="install.title">三条命令完成安装</h2>
+      <h2 class="section-title" data-i18n="install.title">四条命令，从部署到装上第一个技能</h2>
       <p class="section-desc" data-i18n="install.desc">默认使用 SQLite，零配置启动。随时可升级至 PostgreSQL。</p>
       <div class="install-grid">
         <div class="install-card">
@@ -235,6 +274,10 @@
         <div class="install-card">
           <div class="os" data-i18n="install.s3t">第三步 — 启动服务</div>
           <code>skillhub-selfhost server-start</code>
+        </div>
+        <div class="install-card">
+          <div class="os" data-i18n="install.s4t">第四步 — 给 Agent 装上技能</div>
+          <code>curl -sSL -o /tmp/skill.zip http://localhost:8000/api/skills/alice/foo/download && unzip -o /tmp/skill.zip -d ~/.agents/skills/</code>
         </div>
       </div>
     </div>
@@ -251,7 +294,7 @@
 
   <footer>
     <div class="container">
-      <p>SkillHub &copy; 2024. <span data-i18n="footer.text">使用 Apache-2.0 协议开源。</span> <a href="https://github.com/mikigo/skillhub-selfhost" data-i18n="footer.link">GitHub</a></p>
+      <p>SkillHub-SelfHost &copy; 2026. <span data-i18n="footer.text">使用 Apache-2.0 协议开源。</span> <a href="https://github.com/mikigo/skillhub-selfhost" data-i18n="footer.link">GitHub</a></p>
     </div>
   </footer>
 
@@ -263,18 +306,20 @@
         'hero.desc':'自托管的 AI 技能市场。上传、搜索、版本管理、分享 — 一条命令即可完成安装。',
         'hero.github':'查看 GitHub','hero.start':'快速开始',
         'features.label':'功能特性','features.title':'团队所需的一切','features.desc':'从零到完整可用的技能仓库只需几分钟。无云依赖，无厂商锁定。',
-        'features.f1t':'浏览与搜索','features.f1d':'全文搜索、标签筛选、多种排序方式。快速找到任何任务所需技能。',
-        'features.f2t':'拖拽上传','features.f2d':'拖入文件夹自动打包 ZIP，自动提取 SKILL.md 元数据。支持版本号与更新说明。',
-        'features.f3t':'版本管理','features.f3d':'多版本并存，自由切换。作者可删除旧版本。',
-        'features.f4t':'用户与认证','features.f4d':'注册需管理员审批。BCrypt 加密 + JWT 令牌刷新。支持技能转让。',
-        'features.f5t':'主题与国际化','features.f5d':'亮色/暗色主题，中英文界面。支持自定义 Logo 与 Favicon。',
-        'features.f6t':'管理面板','features.f6d':'审批用户、禁用/启用账号、创建用户。完全掌控访问权限。',
+        'features.f1t':'浏览与搜索','features.f1d':'全文搜索、标签筛选，按下载量或上传时间排序。快速找到任何任务所需技能。',
+        'features.f2t':'拖拽上传','features.f2d':'拖入文件夹自动打包 ZIP，展示名和标签直接从 SKILL.md 的 frontmatter 读取。支持版本号与更新说明。',
+        'features.f3t':'从 GitLab 导入','features.f3d':'填仓库地址、分支和路径即可，内容实时从仓库读取。GitLab 上改了，刷新详情页就是最新的。',
+        'features.f4t':'版本管理','features.f4d':'多版本并存，自由切换。作者可删除旧版本。',
+        'features.f5t':'用户与认证','features.f5d':'注册需管理员审批。BCrypt 加密密码，JWT 访问令牌 + 刷新令牌。',
+        'features.f6t':'权限控制','features.f6d':'管理员与普通用户角色分离，技能归属到个人，也可以转让给同事。',
+        'features.f7t':'主题与国际化','features.f7d':'亮色/暗色主题，跟随系统偏好，中英文界面。Logo 与站点标题都能换成自己的。',
+        'features.f8t':'管理面板','features.f8d':'审批用户、禁用/启用账号、创建用户。完全掌控访问权限。',
         'screenshots.label':'界面展示','screenshots.title':'简洁直观的界面','screenshots.desc':'精心设计的交互体验，团队上手即用。',
         'screenshots.tab1':'主页','screenshots.tab2':'上传页','screenshots.tab3':'我的技能','screenshots.tab4':'暗色主题','screenshots.tab5':'亮色主题',
         'stats.label':'关键数据','stats.title':'为规模化而生',
-        'stats.s1':'一个可执行文件','stats.s2':'种语言（中 / 英）','stats.s3':'外部依赖','stats.s4':'技能托管容量',
-        'install.label':'快速开始','install.title':'三条命令完成安装','install.desc':'默认使用 SQLite，零配置启动。随时可升级至 PostgreSQL。',
-        'install.s1t':'第一步 — 安装','install.s2t':'第二步 — 创建管理员','install.s3t':'第三步 — 启动服务',
+        'stats.s1':'种技能接入方式（ZIP / GitLab）','stats.s2':'种语言（中 / 英）','stats.s3':'外部依赖','stats.s4':'技能托管容量',
+        'install.label':'快速开始','install.title':'四条命令，从部署到装上第一个技能','install.desc':'默认使用 SQLite，零配置启动。随时可升级至 PostgreSQL。',
+        'install.s1t':'第一步 — 安装','install.s2t':'第二步 — 创建管理员','install.s3t':'第三步 — 启动服务','install.s4t':'第四步 — 给 Agent 装上技能',
         'cta.title':'准备好给你的 Agent 升级了吗？','cta.desc':'自托管。开源。一条命令完成安装。','cta.github':'在 GitHub 上标星',
         'footer.text':'使用 Apache-2.0 协议开源。','footer.link':'GitHub'
       },
@@ -284,18 +329,20 @@
         'hero.desc':'A self-hosted marketplace for AI agent skills. Upload, search, version, share — one command to install.',
         'hero.github':'View on GitHub','hero.start':'Get Started',
         'features.label':'Features','features.title':'Everything your team needs','features.desc':'From zero to a fully-featured skill repository in minutes. No cloud dependency, no vendor lock-in.',
-        'features.f1t':'Browse & Search','features.f1d':'Full-text search, tag filtering, multi-sort ranking. Find the right skill for any task.',
-        'features.f2t':'Drag & Drop Upload','features.f2d':'Drop a folder, auto-zip, auto-extract frontmatter from SKILL.md. Version with release notes.',
-        'features.f3t':'Version Management','features.f3d':'Multiple versions coexist. Switch freely. Authors can prune old releases.',
-        'features.f4t':'User & Auth System','features.f4d':'Registration with admin approval. BCrypt + JWT with refresh tokens. Transfer skills between users.',
-        'features.f5t':'Dark Mode & i18n','features.f5d':'Light/dark themes. Chinese and English locales. Customizable logo, favicon via config.json.',
-        'features.f6t':'Admin Dashboard','features.f6d':'Approve users, disable accounts, create users. Full control over who accesses your skill hub.',
+        'features.f1t':'Browse & Search','features.f1d':'Full-text search and tag filtering, sorted by downloads or upload time. Find the right skill for any task.',
+        'features.f2t':'Drag & Drop Upload','features.f2d':'Drop a folder and it zips itself. Display name and tags come straight from the SKILL.md frontmatter. Version with release notes.',
+        'features.f3t':'Import from GitLab','features.f3d':'Point at a repository, branch and path. Content is read live from the repo — edit it in GitLab and the page shows the latest.',
+        'features.f4t':'Version Management','features.f4d':'Multiple versions coexist. Switch freely. Authors can prune old releases.',
+        'features.f5t':'User & Auth System','features.f5d':'Registration with admin approval. BCrypt password hashing, JWT access tokens with refresh.',
+        'features.f6t':'Access Control','features.f6d':'Admins and regular users are separate roles. Skills belong to their author and can be handed over to a teammate.',
+        'features.f7t':'Themes & i18n','features.f7d':'Light and dark themes that follow your system preference, English and Chinese UI. Your own logo and site title.',
+        'features.f8t':'Admin Dashboard','features.f8d':'Approve users, disable accounts, create users. Full control over who accesses your skill hub.',
         'screenshots.label':'Screenshots','screenshots.title':'Sleek and intuitive','screenshots.desc':'A polished interface your team will actually enjoy using.',
         'screenshots.tab1':'Home','screenshots.tab2':'Upload','screenshots.tab3':'My Skills','screenshots.tab4':'Dark Theme','screenshots.tab5':'Light Theme',
         'stats.label':'By the Numbers','stats.title':'Built for scale',
-        'stats.s1':'Binary to deploy','stats.s2':'Languages (EN / 中文)','stats.s3':'External dependencies','stats.s4':'Skills you can host',
-        'install.label':'Quick Start','install.title':'Install in 3 commands','install.desc':'Zero-config SQLite by default. Scale to PostgreSQL when ready.',
-        'install.s1t':'Step 1 — Install','install.s2t':'Step 2 — Create Admin','install.s3t':'Step 3 — Launch',
+        'stats.s1':'Ways to add a skill (ZIP / GitLab)','stats.s2':'Languages (EN / 中文)','stats.s3':'External dependencies','stats.s4':'Skills you can host',
+        'install.label':'Quick Start','install.title':'From deploy to first skill in 4 commands','install.desc':'Zero-config SQLite by default. Scale to PostgreSQL when ready.',
+        'install.s1t':'Step 1 — Install','install.s2t':'Step 2 — Create Admin','install.s3t':'Step 3 — Launch','install.s4t':'Step 4 — Install a skill',
         'cta.title':'Ready to level up your AI agents?','cta.desc':'Self-hosted. Open source. One command to install.',
         'cta.github':'Star on GitHub','footer.text':'Open source under Apache-2.0.','footer.link':'GitHub'
       }
@@ -304,7 +351,7 @@
     function applyLang(l) {
       lang = l;
       document.documentElement.lang = l === 'zh' ? 'zh' : 'en';
-      document.title = l === 'zh' ? 'SkillHub — 自托管 AI 技能市场' : 'SkillHub — Self-Hosted AI Skill Marketplace';
+      document.title = l === 'zh' ? 'SkillHub-SelfHost — 自托管 AI 技能市场' : 'SkillHub-SelfHost — Self-Hosted AI Skill Marketplace';
       document.querySelector('meta[name=description]').content = l === 'zh' ? '自托管的 AI 技能市场。搜索、上传、分享 — 一条命令完成安装。' : 'A self-hosted marketplace for AI agent skills. Search, upload, share — one command installs them all.';
       document.querySelectorAll('[data-i18n]').forEach(function(el) {
         var k = el.getAttribute('data-i18n');

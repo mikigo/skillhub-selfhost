@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api/client'
+import { skillPath } from '@/lib/skillPath'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -133,14 +134,19 @@ export default function Home() {
           </div>
           {skills.map((skill, i) => (
             <Link
-              key={skill.name}
-              to={`/skills/${skill.name}`}
+              key={`${skill.author.username}/${skill.name}`}
+              to={skillPath(skill.author.username, skill.name)}
               className="grid gap-3 px-3 py-2 rounded hover:bg-muted items-center"
               style={{ gridTemplateColumns: '1fr 15fr 3fr' }}
             >
               <span className="text-sm text-muted-foreground">{(page - 1) * PAGE_SIZE + i + 1}</span>
               <div className="min-w-0" title={skill.description}>
-                <div className="font-medium truncate">{skill.display_name}</div>
+                <div className="font-medium truncate">
+                  {skill.display_name}
+                  <span className="ml-2 text-xs text-muted-foreground font-normal">
+                    {skill.author.username}{skill.original_author ? `[${skill.original_author}]` : ''}
+                  </span>
+                </div>
                 <div className="text-xs text-muted-foreground truncate">{skill.description}</div>
               </div>
               <span className="text-sm text-right text-muted-foreground">{skill.download_count.toLocaleString()}</span>

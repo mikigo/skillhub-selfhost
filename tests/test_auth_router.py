@@ -30,6 +30,21 @@ async def test_register_duplicate(client):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("username", ["has space", "has/slash", "%2e", "中文", "-leading", "a@b"])
+async def test_register_rejects_usernames_unsafe_in_a_url_path(client, username):
+    """用户名要当 /skills/<username>/<name> 的路径段用，含分隔符或需转义的字符一律拒绝。"""
+    resp = await client.post("/api/auth/register", json={"username": username, "password": "pass123"})
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("username", ["abc", "a1", "user.name", "user_name", "user-name", "A9"])
+async def test_register_accepts_safe_usernames(client, username):
+    resp = await client.post("/api/auth/register", json={"username": username, "password": "pass123"})
+    assert resp.status_code == 204
+
+
+@pytest.mark.asyncio
 async def test_login_success(client):
     await register_user("loginuser", "pass123", status="active")
     resp = await client.post("/api/auth/login", json={"username": "loginuser", "password": "pass123"})
