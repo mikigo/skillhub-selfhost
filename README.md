@@ -10,6 +10,38 @@ AI Agent 通过可复用的模块（"技能"）获取领域知识和工具链集
 
 ---
 
+## 快速开始
+
+### 安装
+
+```bash
+pip install skillhub-selfhost
+```
+
+要求 Python &ge; 3.8。
+
+### 创建管理员
+
+```bash
+skillhub-selfhost admin-init
+```
+
+### 启动服务
+
+```bash
+skillhub-selfhost server-start
+```
+
+在浏览器中访问 `http://localhost:8000`。
+
+自定义监听地址与端口：
+
+```bash
+skillhub-selfhost server-start --host 0.0.0.0 --port 8080
+```
+
+---
+
 ## 功能
 
 | 分类 | 说明 |
@@ -93,38 +125,6 @@ curl -sSL -o /tmp/skill.zip https://your-skillhub/api/skills/alice/foo/download 
 - 假定 GitLab 安装在域名根路径（即 `https://host/api/v4`）；装在子路径（如 `https://host/gitlab/...`）时会表现为 404
 - 同一作者名下，技能名取自路径最后一段，因此 `agents/foo` 与 `tools/foo` 会撞名（不同作者可以各有一个 `foo`）
 - 已登记的技能会被重新指向：同一作者用相同技能名再次提交，会覆盖原有的分支/路径配置
-
----
-
-## 快速开始
-
-### 安装
-
-```bash
-pip install skillhub-selfhost
-```
-
-要求 Python &ge; 3.8。
-
-### 创建管理员
-
-```bash
-skillhub-selfhost admin-init
-```
-
-### 启动服务
-
-```bash
-skillhub-selfhost server-start
-```
-
-在浏览器中访问 `http://localhost:8000`。
-
-自定义监听地址与端口：
-
-```bash
-skillhub-selfhost server-start --host 0.0.0.0 --port 8080
-```
 
 ---
 
